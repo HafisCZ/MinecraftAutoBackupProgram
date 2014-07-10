@@ -19,15 +19,12 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import net.lingala.zip4j.core.ZipFile;
@@ -135,8 +132,6 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		b1.setFont(getFont().deriveFont(10.0f));
 		pane.add(b2, c);
 
-		// File f = fileChooser.getCurrentDirectory();
-
 		m1 = new JRadioButton();
 		m1.setActionCommand("1");
 		m1.setText("Yes");
@@ -237,8 +232,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 				try {
 					Calendar cal = Calendar.getInstance();
 					long timestamp = cal.getTimeInMillis();
-					ZipFile zipFile = new ZipFile(in2.getText() + "\\mas" + "_" + timestamp + ".zip");
-					System.out.println(in2.getText() + "\\mas" + "_" + timestamp + ".zip");
+					ZipFile zipFile = new ZipFile(in2.getText() + "\\backup" + "_" + timestamp + ".zip");
 					ZipParameters parameters = new ZipParameters();
 					parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
 					parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
@@ -287,26 +281,19 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 	}
 
 	public static void setupGui() {
-		// Create and setup frame
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception ex) {
 			ex.printStackTrace();
-			JOptionPane.showMessageDialog(null, "Oh, there is something wrong '" + "\nHashCode: " + ex.hashCode(), "Sorry !",
-					JOptionPane.ERROR_MESSAGE);
 		}
-		JFrame Frame = new JFrame("MCAB - Minecraft AutoBackup | CC-NY-NC-ND by mar21");
+		JFrame Frame = new JFrame("Minecraft Backup Utility | CC-NY-NC-ND by mar21");
 		Frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		Frame.setResizable(false);
-		// Create and setup content page SIZE(800*500)
 		Start Content = new Start();
 		Content.setOpaque(true);
 		Frame.setContentPane(Content);
-		// Display the Window
 		Frame.pack();
-		// Frame.setSize(800, 500);
 		Frame.setVisible(true);
-		System.out.println("[System] " + Frame.getSize());
 	}
 
 	public void actionPerformed(ActionEvent e) {
