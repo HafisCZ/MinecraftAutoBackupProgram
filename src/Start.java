@@ -9,6 +9,7 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -19,6 +20,7 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTable;
@@ -146,10 +148,9 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 				try {
 					JFileChooser chooser = new JFileChooser();
 					chooser.setCurrentDirectory(new java.io.File("."));
-					chooser.setDialogTitle("Choose Minecraft save folder");
+					chooser.setDialogTitle("Choose save folder");
 					chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 					chooser.setAcceptAllFileFilterUsed(false);
-
 					if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
 						in1.setText((chooser.getSelectedFile()).toString());
 					} else {
@@ -218,8 +219,13 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 					chooser.setFileFilter(new FileNameExtensionFilter(".zip Files", "zip", ".zip Files"));
 					chooser.setAcceptAllFileFilterUsed(false);
 					if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-						ZipFile zipFile = new ZipFile((chooser.getSelectedFile()).toString());
-						zipFile.extractAll(in1.getText().substring(0, in1.getText().lastIndexOf("\\")));
+						if (JOptionPane.showConfirmDialog(null, "Do you really want to retrieve files from backup ?"
+								+ "\nThis will remove all current files in specified path"
+								+ "\nand place there all files from :\n"+chooser.getSelectedFile().getName().toString(), "Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
+							delete(new File(in1.getText()));
+							ZipFile zipFile = new ZipFile((chooser.getSelectedFile()).toString());
+							zipFile.extractAll(in1.getText().substring(0, in1.getText().lastIndexOf("\\")));
+						}
 					} else {
 					}
 				} catch (Exception j) {
@@ -303,5 +309,25 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 
+	}
+
+	public static boolean delete(File file) {
+
+		File[] flist = null;
+
+		if (file == null) { return false; }
+
+		if (file.isFile()) { return file.delete(); }
+
+		if (!file.isDirectory()) { return false; }
+
+		flist = file.listFiles();
+		if (flist != null && flist.length > 0) {
+			for (File f : flist) {
+				if (!delete(f)) { return false; }
+			}
+		}
+
+		return file.delete();
 	}
 }
