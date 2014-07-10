@@ -242,7 +242,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 					ZipParameters parameters = new ZipParameters();
 					parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
 					parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
-					zipFile.createZipFileFromFolder(in1.getText(), parameters, true, 10485760);
+					zipFile.createZipFileFromFolder(in1.getText(), parameters, false, 10485760);
 				} catch (Exception j) {
 				}
 			}
