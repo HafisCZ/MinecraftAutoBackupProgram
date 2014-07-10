@@ -12,7 +12,7 @@ your backup files.
 - If you want to keep those upper pathes for next uses, click on 'Save' button. This function will write upper choosed 
 pathes to file 'data.nfo' placed in the same directory as actual program.
 - Now you can backup your world/worlds via clicking on 'Backup' button. 
-It will create a '.zip' file with name like 'mas_1404994712031'.
+It will create a '.zip' file with name like 'backup_1404994712031'.
 
 HOW TO: RETRIEVE
 - You can retrieve the save/saves from the backup file.
