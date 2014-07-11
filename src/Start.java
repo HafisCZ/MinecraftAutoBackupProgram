@@ -18,19 +18,20 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-import javax.swing.ButtonGroup;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.border.EtchedBorder;
 import javax.swing.table.DefaultTableModel;
 
 import net.lingala.zip4j.core.ZipFile;
@@ -48,6 +49,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 
 	public static JTextField in1;
 	public static JTextField in2;
+	public static JTextField in3;
 
 	public static String filename;
 
@@ -59,12 +61,11 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 	public static String backupPath;
 	public static JTable table;
 
-	public static JRadioButton m1;
-	public static JRadioButton m2;
+	public static JCheckBox m1;
 
-	public static ButtonGroup group;
 	public static JButton b1;
 	public static JButton b2;
+	public static JButton b3;
 
 	public static String[] data;
 	public static String datas;
@@ -72,6 +73,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 	public static JButton createBackup;
 	public static JButton loadBackup;
 	public static JButton saveData;
+	public static JButton playGame;
 
 	public Start() {
 
@@ -127,8 +129,29 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		c.gridwidth = 3;
 		pane.add(in2, c);
 
+		in3 = new JTextField();
+		in3.setText(null);
+		in3.setColumns(20);
+		JLabel lb3 = new JLabel("Minecraft:");
+		c.fill = GridBagConstraints.HORIZONTAL;
+		lb3.setFont(getFont().deriveFont(17.0f));
+		c.ipady = 10;
+		c.weightx = 1.0;
+		c.gridx = 0;
+		c.gridy = 2;
+		in3.setFont(getFont().deriveFont(14.0f));
+		pane.add(lb3, c);
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.ipady = 10;
+		c.gridx = 1;
+		c.weightx = 1.0;
+		c.gridy = 2;
+		c.gridwidth = 3;
+		pane.add(in3, c);
+
 		b1 = new JButton("...");
 		b2 = new JButton("...");
+		b3 = new JButton("...");
 
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.ipady = 15;
@@ -146,14 +169,19 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		b1.setFont(getFont().deriveFont(10.0f));
 		pane.add(b2, c);
 
-		m1 = new JRadioButton();
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.ipady = 15;
+		c.gridx = 4;
+		c.gridy = 2;
+		c.gridwidth = 1;
+		b1.setFont(getFont().deriveFont(10.0f));
+		pane.add(b3, c);
+
+		m1 = new JCheckBox();
 		m1.setActionCommand("1");
-		m1.setText("Yes");
-		m1.setFont(getFont().deriveFont(16.0f));
-		m2 = new JRadioButton();
-		m2.setActionCommand("2");
-		m2.setText("No");
-		m2.setFont(getFont().deriveFont(16.0f));
+		m1.setText("AutoBackup");
+		m1.setFont(getFont().deriveFont(14.0f));
+		m1.setEnabled(false);
 
 		b1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -192,24 +220,32 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 			}
 		});
 
-		group = new ButtonGroup();
-		group.add(m1);
-		group.add(m2);
+		b3.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					JFileChooser chooser = new JFileChooser();
+					chooser.setCurrentDirectory(new java.io.File("."));
+					chooser.setDialogTitle("Choose Minecraft launcher");
+					chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+					chooser.setFileHidingEnabled(false);
+					chooser.setAcceptAllFileFilterUsed(false);
+					if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+						in3.setText((chooser.getSelectedFile()).toString());
+					} else {
+					}
+				} catch (Exception j) {
+				}
+			}
+		});
 
 		JPanel subp = new JPanel();
 		subp.setLayout(new FlowLayout());
 		c.fill = GridBagConstraints.HORIZONTAL;
 		c.ipady = 15;
 		c.gridx = 0;
-		c.gridy = 2;
+		c.gridy = 3;
 		c.gridwidth = 5;
-
-		JLabel choose = new JLabel("AutoBackup :");
-		choose.setFont(getFont().deriveFont(17.0f));
-		subp.add(choose);
-
-		subp.add(m1);
-		subp.add(m2);
+		subp.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
 
 		saveData = new JButton("Set");
 		saveData.setFont(getFont().deriveFont(15.0f));
@@ -222,6 +258,23 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		createBackup = new JButton("Backup");
 		createBackup.setFont(getFont().deriveFont(15.0f));
 		createBackup.setForeground(new Color(0, 200, 10));
+
+		playGame = new JButton("Play");
+		playGame.setFont(getFont().deriveFont(15.0f));
+		playGame.setForeground(Color.BLACK);
+
+		subp.add(playGame);
+		subp.add(m1);
+
+		playGame.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				try {
+					new ProcessBuilder(in3.getText()).start();
+				} catch (Exception f) {
+					f.printStackTrace();
+				}
+			}
+		});
 
 		loadBackup.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {// TODO
@@ -341,7 +394,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 			public void actionPerformed(ActionEvent e) {
 				try {
 					BufferedWriter w = new BufferedWriter(new FileWriter("data.nfo"));
-					w.write(in1.getText() + "|" + in2.getText());
+					w.write(in1.getText() + "|" + in2.getText() + "|" + in3.getText());
 					w.close();
 				} catch (Exception j) {
 					j.printStackTrace();
@@ -356,10 +409,15 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		pane.add(subp, c);
 
 		try {
-			String datas = new String(Files.readAllBytes(Paths.get("data.nfo")));
-			data = datas.split("\\|");
-			in1.setText(data[0].toString());
-			in2.setText(data[1].toString());
+			if (new File("data.nfo").isFile()){
+				String datas = new String(Files.readAllBytes(Paths.get("data.nfo")));
+				data = datas.split("\\|");
+				if (data.length == 3){
+					in1.setText(data[0].toString());
+					in2.setText(data[1].toString());
+					in3.setText(data[2].toString());
+				}
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
