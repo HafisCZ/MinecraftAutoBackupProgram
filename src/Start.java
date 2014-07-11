@@ -31,6 +31,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.table.DefaultTableModel;
 
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
@@ -232,7 +233,8 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 					frame2.setLayout(new BorderLayout());
 					JPanel listing = new JPanel();
 					frame2.add(listing, BorderLayout.CENTER);
-					table = new JTable(getDatabase(in2.getText()), cols);
+					table = new JTable();
+					table.setModel(new DefaultTableModel(getDatabase(in2.getText()), cols));
 					table.setPreferredScrollableViewportSize(new Dimension(570, 200));
 					table.setFillsViewportHeight(true);
 					JScrollPane slr = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
@@ -240,50 +242,44 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 					JPanel buttons = new JPanel(new FlowLayout());
 					previousData = getDatabase(in2.getText());
 					frame2.add(buttons, BorderLayout.PAGE_END);
-					//browse = new JButton("...");
-					//buttons.add(browse);
+					browse = new JButton("...");
+					buttons.add(browse);
 					use = new JButton("Load");
 					buttons.add(use);
 					remove = new JButton("Remove");
-					buttons.add(remove);/*
+					buttons.add(remove);
 					browse.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent e) {
 							try {
 								JFileChooser chooser = new JFileChooser();
 								chooser.setCurrentDirectory(new java.io.File("."));
-								chooser.setDialogTitle("Choose folder for backups");
+								chooser.setDialogTitle("Choose folder with backups");
 								chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 								chooser.setFileHidingEnabled(false);
 								chooser.setAcceptAllFileFilterUsed(false);
 								if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-									in2.setText((chooser.getSelectedFile()).toString());
-									backupPath = in2.getText();
-									// TODO
-								} else {
+									backupPath = (chooser.getSelectedFile()).toString();
+									DefaultTableModel dm = (DefaultTableModel) table.getModel();
+									dm.getDataVector().removeAllElements();
+									dm.fireTableDataChanged();
+									table.setModel(new DefaultTableModel(getDatabase(backupPath), cols));
 								}
-							} catch (Exception j) {
-								j.printStackTrace();
+							} catch (Exception f) {
+								f.printStackTrace();
 							}
 						}
-					});*/
+					});
+
 					remove.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent e) {
 							try {
 								Object selected = table.getModel().getValueAt(table.getSelectedRow(), 0);
 								String deletepath = in2.getText() + "\\" + selected;
 								delete(new File(deletepath));
-								Object[][] changeData = getDatabase(in2.getText());// TODO
-								for (int i = 0; i < previousData.length; i++) {
-									for (int y = 0; y < previousData[0].length; y++) {
-										table.getModel().setValueAt(null, i, y);
-									}
-								}
-								for (int i = 0; i < changeData.length; i++) {
-									for (int y = 0; y < changeData[0].length; y++) {
-										table.getModel().setValueAt(changeData[i][y], i, y);
-									}
-								}
-
+								DefaultTableModel dm = (DefaultTableModel) table.getModel();
+								dm.getDataVector().removeAllElements();
+								dm.fireTableDataChanged();
+								table.setModel(new DefaultTableModel(getDatabase(in2.getText()), cols));
 							} catch (Exception j) {
 								j.printStackTrace();
 							}
@@ -296,9 +292,8 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 								Object selected = table.getModel().getValueAt(table.getSelectedRow(), 0);
 								String path = in2.getText() + "\\" + selected;
 								if (JOptionPane.showConfirmDialog(null, "Do you really want to retrieve files from backup ?"
-										+ "\nThis will remove all current files in specified path" + "\nand place there all files from :\n"
-										+ path, "Warning", JOptionPane.WARNING_MESSAGE,
-										JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
+										+ "\nThis will remove all current files in specified path" + "\nand place there all files from :\n" + path,
+										"Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
 									delete(new File(in1.getText()));
 									ZipFile zipFile = new ZipFile(path);
 									zipFile.extractAll(in1.getText().substring(0, in1.getText().lastIndexOf("\\")));
