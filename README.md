@@ -12,9 +12,11 @@ your backup files.
 - If you want to keep those upper pathes for next uses, click on 'Save' button. This function will write upper choosed 
 pathes to file 'data.nfo' placed in the same directory as actual program.
 - Now you can backup your world/worlds via clicking on 'Backup' button. 
-It will create a '.zip' file with name like 'backup_1404994712031'.
+It will create a '.zip' file with name like 'backup_14_07_11'.
 
 HOW TO: RETRIEVE
 - You can retrieve the save/saves from the backup file.
 - Simply choose or write the path to your save folder as i written before.
 - Now click on red 'Load' button and choose desired backup file which from you want to retrieve the save/saves.
+
+You can also list through all created backups and delete them too. The list will provide a view of all there placed backups, their last date of modify and also in next updates the version of minecraft, where they were open last.
