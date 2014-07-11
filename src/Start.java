@@ -240,12 +240,12 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 					JPanel buttons = new JPanel(new FlowLayout());
 					previousData = getDatabase(in2.getText());
 					frame2.add(buttons, BorderLayout.PAGE_END);
-					browse = new JButton("...");
-					buttons.add(browse);
+					//browse = new JButton("...");
+					//buttons.add(browse);
 					use = new JButton("Load");
 					buttons.add(use);
 					remove = new JButton("Remove");
-					buttons.add(remove);
+					buttons.add(remove);/*
 					browse.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent e) {
 							try {
@@ -265,7 +265,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 								j.printStackTrace();
 							}
 						}
-					});
+					});*/
 					remove.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent e) {
 							try {
@@ -381,7 +381,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 	}
 
 	public Object[][] getDatabase(String location) {
-		DateFormat dateFormat = new SimpleDateFormat("yy MM dd");
+		DateFormat dateFormat = new SimpleDateFormat("dd MM yy HH:mm:ss");
 		File[] files = listFiles(location);
 		String[] dates = new String[files.length];
 		String[] version = new String[files.length];
