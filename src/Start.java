@@ -13,6 +13,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import javax.swing.ButtonGroup;
@@ -46,6 +48,8 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 
 	public static JTextField in1;
 	public static JTextField in2;
+	
+	public static String filename;
 
 	public static JRadioButton m1;
 	public static JRadioButton m2;
@@ -150,6 +154,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 					chooser.setCurrentDirectory(new java.io.File("."));
 					chooser.setDialogTitle("Choose save folder");
 					chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+					chooser.setFileHidingEnabled(false);
 					chooser.setAcceptAllFileFilterUsed(false);
 					if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
 						in1.setText((chooser.getSelectedFile()).toString());
@@ -168,6 +173,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 					chooser.setCurrentDirectory(new java.io.File("."));
 					chooser.setDialogTitle("Choose folder for backups");
 					chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+					chooser.setFileHidingEnabled(false);
 					chooser.setAcceptAllFileFilterUsed(false);
 					if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
 						in2.setText((chooser.getSelectedFile()).toString());
@@ -201,7 +207,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		saveData.setFont(getFont().deriveFont(15.0f));
 		saveData.setForeground(Color.BLACK);
 
-		loadBackup = new JButton("Load");
+		loadBackup = new JButton("Backlist");
 		loadBackup.setFont(getFont().deriveFont(15.0f));
 		loadBackup.setForeground(Color.red);
 
@@ -217,11 +223,12 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 					chooser.setDialogTitle("Choose backup file");
 					chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 					chooser.setFileFilter(new FileNameExtensionFilter(".zip Files", "zip", ".zip Files"));
+					chooser.setFileHidingEnabled(false);
 					chooser.setAcceptAllFileFilterUsed(false);
 					if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
 						if (JOptionPane.showConfirmDialog(null, "Do you really want to retrieve files from backup ?"
-								+ "\nThis will remove all current files in specified path"
-								+ "\nand place there all files from :\n"+chooser.getSelectedFile().getName().toString(), "Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
+								+ "\nThis will remove all current files in specified path" + "\nand place there all files from :\n"
+								+ chooser.getSelectedFile().getName().toString(), "Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
 							delete(new File(in1.getText()));
 							ZipFile zipFile = new ZipFile((chooser.getSelectedFile()).toString());
 							zipFile.extractAll(in1.getText().substring(0, in1.getText().lastIndexOf("\\")));
@@ -237,13 +244,25 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 			public void actionPerformed(ActionEvent e) {
 				try {
 					Calendar cal = Calendar.getInstance();
-					long timestamp = cal.getTimeInMillis();
-					ZipFile zipFile = new ZipFile(in2.getText() + "\\backup" + "_" + timestamp + ".zip");
+					DateFormat dateFormat = new SimpleDateFormat("yy_MM_dd");
+					filename = in2.getText() + "\\backup" + "_" + dateFormat.format(cal.getTime()) + ".zip";
+					if (new File(in2.getText() + "\\backup" + "_" + dateFormat.format(cal.getTime()) + ".zip").isFile()) {
+						for (int i = 1;; i++) {
+							if (new File(in2.getText() + "\\backup" + "_" + dateFormat.format(cal.getTime()) + "_" + i + ".zip").isFile()) {
+								continue;
+							}
+							filename = in2.getText() + "\\backup" + "_" + dateFormat.format(cal.getTime()) + "_" + i + ".zip";
+							break;
+						}
+					}
+					ZipFile zipFile = new ZipFile(filename);
 					ZipParameters parameters = new ZipParameters();
 					parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
 					parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
 					zipFile.createZipFileFromFolder(in1.getText(), parameters, false, 10485760);
 				} catch (Exception j) {
+				} finally {
+					JOptionPane.showMessageDialog(null, "Backup file created :\n" + filename, "Backup completed", JOptionPane.PLAIN_MESSAGE);
 				}
 			}
 		});
