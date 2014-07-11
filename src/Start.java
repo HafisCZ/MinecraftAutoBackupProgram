@@ -1,6 +1,7 @@
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.ComponentOrientation;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -25,11 +26,11 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
@@ -44,12 +45,17 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 
 	private static final long serialVersionUID = 1L;
 
-	public static JTable table;
-
 	public static JTextField in1;
 	public static JTextField in2;
-	
+
 	public static String filename;
+
+	public static String[] cols = { "Backup", "Date", "Version" };// TODO
+	public static JButton browse;
+	public static JButton use;
+	public static JButton remove;
+	public static String backupPath;
+	public static JTable table;
 
 	public static JRadioButton m1;
 	public static JRadioButton m2;
@@ -71,7 +77,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		this.add(setupP1(), BorderLayout.CENTER);
 	}
 
-	public JPanel setupP1() { // TODO
+	public JPanel setupP1() {
 		JPanel pane = new JPanel();
 		pane.setLayout(new GridBagLayout());
 		pane.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
@@ -216,26 +222,64 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		createBackup.setForeground(new Color(0, 200, 10));
 
 		loadBackup.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(ActionEvent e) {// TODO
 				try {
-					JFileChooser chooser = new JFileChooser();
-					chooser.setCurrentDirectory(new java.io.File("."));
-					chooser.setDialogTitle("Choose backup file");
-					chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-					chooser.setFileFilter(new FileNameExtensionFilter(".zip Files", "zip", ".zip Files"));
-					chooser.setFileHidingEnabled(false);
-					chooser.setAcceptAllFileFilterUsed(false);
-					if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-						if (JOptionPane.showConfirmDialog(null, "Do you really want to retrieve files from backup ?"
-								+ "\nThis will remove all current files in specified path" + "\nand place there all files from :\n"
-								+ chooser.getSelectedFile().getName().toString(), "Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
-							delete(new File(in1.getText()));
-							ZipFile zipFile = new ZipFile((chooser.getSelectedFile()).toString());
-							zipFile.extractAll(in1.getText().substring(0, in1.getText().lastIndexOf("\\")));
+					JFrame frame2 = new JFrame("Backlist");
+					frame2.setVisible(true);
+					frame2.setSize(600, 300);
+					frame2.setResizable(false);
+					frame2.setLayout(new BorderLayout());
+					JPanel listing = new JPanel();
+					frame2.add(listing, BorderLayout.CENTER);
+					table = new JTable(getDatabase(in2.getText()), cols);
+					table.setPreferredScrollableViewportSize(new Dimension(590, 200));
+					table.setFillsViewportHeight(true);
+					JScrollPane slr = new JScrollPane(table);
+					listing.add(slr);
+					JPanel buttons = new JPanel(new FlowLayout());
+					frame2.add(buttons, BorderLayout.PAGE_END);
+					browse = new JButton("...");
+					buttons.add(browse);
+					use = new JButton("Load");
+					buttons.add(use);
+					remove = new JButton("Remove");
+					buttons.add(remove);
+					browse.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							try {
+								JFileChooser chooser = new JFileChooser();
+								chooser.setCurrentDirectory(new java.io.File("."));
+								chooser.setDialogTitle("Choose folder for backups");
+								chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+								chooser.setFileHidingEnabled(false);
+								chooser.setAcceptAllFileFilterUsed(false);
+								if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+									in2.setText((chooser.getSelectedFile()).toString());
+									backupPath = in2.getText();
+									table.repaint();
+								} else {
+								}
+							} catch (Exception j) {
+								j.printStackTrace();
+							}
 						}
-					} else {
-					}
+					});
+
+					/*
+					 * JFileChooser chooser = new JFileChooser(); chooser.setCurrentDirectory(new java.io.File("."));
+					 * chooser.setDialogTitle("Choose backup file"); chooser.setFileSelectionMode(JFileChooser.FILES_ONLY); chooser.setFileFilter(new
+					 * FileNameExtensionFilter(".zip Files", "zip", ".zip Files")); chooser.setFileHidingEnabled(false);
+					 * chooser.setAcceptAllFileFilterUsed(false); if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) { if
+					 * (JOptionPane.showConfirmDialog(null, "Do you really want to retrieve files from backup ?" +
+					 * "\nThis will remove all current files in specified path" + "\nand place there all files from :\n" +
+					 * chooser.getSelectedFile().getName().toString(), "Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) ==
+					 * JOptionPane.OK_OPTION) { delete(new File(in1.getText())); ZipFile zipFile = new
+					 * ZipFile((chooser.getSelectedFile()).toString()); zipFile.extractAll(in1.getText().substring(0,
+					 * in1.getText().lastIndexOf("\\"))); } } else { }
+					 */
+
 				} catch (Exception j) {
+					j.printStackTrace();
 				}
 			}
 		});
@@ -305,6 +349,19 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		});
 	}
 
+	public Object[][] getDatabase(String location) {
+		DateFormat dateFormat = new SimpleDateFormat("yy MM dd");
+		File[] files = listFiles(location);
+		String[] dates = new String[files.length];
+		String[] version = new String[files.length];
+		for (int i = 0; i < files.length; i++){
+			dates[i] = dateFormat.format(files[i].lastModified());
+			version[i] = "Unknown";
+		}
+		Object[][] output = {nameFiles(location),dates,version};
+		return output;
+	}
+
 	public static void setupGui() {
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -331,22 +388,29 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 	}
 
 	public static boolean delete(File file) {
-
 		File[] flist = null;
-
 		if (file == null) { return false; }
-
 		if (file.isFile()) { return file.delete(); }
-
 		if (!file.isDirectory()) { return false; }
-
 		flist = file.listFiles();
 		if (flist != null && flist.length > 0) {
 			for (File f : flist) {
 				if (!delete(f)) { return false; }
 			}
 		}
-
 		return file.delete();
+	}
+	
+	public static String[] nameFiles(String path){
+		return new File(path).isDirectory() ? new File(path).list() : null;
+	}
+
+	public static File[] listFiles(String path) {
+		File folder = new File(path);
+		if (folder.isDirectory()) {
+			File[] files = folder.listFiles();
+			return files;
+		}
+		return null;
 	}
 }
