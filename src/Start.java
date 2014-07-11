@@ -7,6 +7,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.BufferedWriter;
@@ -47,6 +48,8 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 
 	private static final long serialVersionUID = 1L;
 
+	public static JFrame frame2;
+
 	public static JTextField in1;
 	public static JTextField in2;
 	public static JTextField in3;
@@ -58,6 +61,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 	public static JButton browse;
 	public static JButton use;
 	public static JButton remove;
+	public static JButton close;
 	public static String backupPath;
 	public static JTable table;
 
@@ -279,7 +283,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		loadBackup.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {// TODO
 				try {
-					JFrame frame2 = new JFrame("Backlist");
+					frame2 = new JFrame("Backlist");
 					frame2.setVisible(true);
 					frame2.setSize(600, 300);
 					frame2.setResizable(false);
@@ -301,6 +305,8 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 					buttons.add(use);
 					remove = new JButton("Remove");
 					buttons.add(remove);
+					close = new JButton("Close");
+					buttons.add(close);
 					browse.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent e) {
 							try {
@@ -351,6 +357,16 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 									ZipFile zipFile = new ZipFile(path);
 									zipFile.extractAll(in1.getText().substring(0, in1.getText().lastIndexOf("\\")));
 								}
+							} catch (Exception j) {
+								j.printStackTrace();
+							}
+						}
+					});
+
+					close.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							try {
+								frame2.dispatchEvent(new WindowEvent(frame2, WindowEvent.WINDOW_CLOSING));
 							} catch (Exception j) {
 								j.printStackTrace();
 							}
@@ -409,10 +425,10 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		pane.add(subp, c);
 
 		try {
-			if (new File("data.nfo").isFile()){
+			if (new File("data.nfo").isFile()) {
 				String datas = new String(Files.readAllBytes(Paths.get("data.nfo")));
 				data = datas.split("\\|");
-				if (data.length == 3){
+				if (data.length == 3) {
 					in1.setText(data[0].toString());
 					in2.setText(data[1].toString());
 					in3.setText(data[2].toString());
