@@ -51,6 +51,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 	public static String filename;
 
 	public static String[] cols = { "Backup", "Date", "Version" };// TODO
+	public static Object[][] previousData;
 	public static JButton browse;
 	public static JButton use;
 	public static JButton remove;
@@ -232,11 +233,12 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 					JPanel listing = new JPanel();
 					frame2.add(listing, BorderLayout.CENTER);
 					table = new JTable(getDatabase(in2.getText()), cols);
-					table.setPreferredScrollableViewportSize(new Dimension(590, 200));
+					table.setPreferredScrollableViewportSize(new Dimension(570, 200));
 					table.setFillsViewportHeight(true);
-					JScrollPane slr = new JScrollPane(table);
+					JScrollPane slr = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 					listing.add(slr);
 					JPanel buttons = new JPanel(new FlowLayout());
+					previousData = getDatabase(in2.getText());
 					frame2.add(buttons, BorderLayout.PAGE_END);
 					browse = new JButton("...");
 					buttons.add(browse);
@@ -256,7 +258,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 								if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
 									in2.setText((chooser.getSelectedFile()).toString());
 									backupPath = in2.getText();
-									table.repaint();
+									// TODO
 								} else {
 								}
 							} catch (Exception j) {
@@ -264,19 +266,48 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 							}
 						}
 					});
+					remove.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							try {
+								Object selected = table.getModel().getValueAt(table.getSelectedRow(), 0);
+								String deletepath = in2.getText() + "\\" + selected;
+								delete(new File(deletepath));
+								Object[][] changeData = getDatabase(in2.getText());// TODO
+								for (int i = 0; i < previousData.length; i++) {
+									for (int y = 0; y < previousData[0].length; y++) {
+										table.getModel().setValueAt(null, i, y);
+									}
+								}
+								for (int i = 0; i < changeData.length; i++) {
+									for (int y = 0; y < changeData[0].length; y++) {
+										table.getModel().setValueAt(changeData[i][y], i, y);
+									}
+								}
 
-					/*
-					 * JFileChooser chooser = new JFileChooser(); chooser.setCurrentDirectory(new java.io.File("."));
-					 * chooser.setDialogTitle("Choose backup file"); chooser.setFileSelectionMode(JFileChooser.FILES_ONLY); chooser.setFileFilter(new
-					 * FileNameExtensionFilter(".zip Files", "zip", ".zip Files")); chooser.setFileHidingEnabled(false);
-					 * chooser.setAcceptAllFileFilterUsed(false); if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) { if
-					 * (JOptionPane.showConfirmDialog(null, "Do you really want to retrieve files from backup ?" +
-					 * "\nThis will remove all current files in specified path" + "\nand place there all files from :\n" +
-					 * chooser.getSelectedFile().getName().toString(), "Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) ==
-					 * JOptionPane.OK_OPTION) { delete(new File(in1.getText())); ZipFile zipFile = new
-					 * ZipFile((chooser.getSelectedFile()).toString()); zipFile.extractAll(in1.getText().substring(0,
-					 * in1.getText().lastIndexOf("\\"))); } } else { }
-					 */
+							} catch (Exception j) {
+								j.printStackTrace();
+							}
+						}
+					});
+
+					use.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							try {
+								Object selected = table.getModel().getValueAt(table.getSelectedRow(), 0);
+								String path = in2.getText() + "\\" + selected;
+								if (JOptionPane.showConfirmDialog(null, "Do you really want to retrieve files from backup ?"
+										+ "\nThis will remove all current files in specified path" + "\nand place there all files from :\n"
+										+ path, "Warning", JOptionPane.WARNING_MESSAGE,
+										JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
+									delete(new File(in1.getText()));
+									ZipFile zipFile = new ZipFile(path);
+									zipFile.extractAll(in1.getText().substring(0, in1.getText().lastIndexOf("\\")));
+								}
+							} catch (Exception j) {
+								j.printStackTrace();
+							}
+						}
+					});
 
 				} catch (Exception j) {
 					j.printStackTrace();
@@ -354,12 +385,18 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		File[] files = listFiles(location);
 		String[] dates = new String[files.length];
 		String[] version = new String[files.length];
-		for (int i = 0; i < files.length; i++){
+		String[] names = nameFiles(location);
+		for (int i = 0; i < files.length; i++) {
 			dates[i] = dateFormat.format(files[i].lastModified());
 			version[i] = "Unknown";
 		}
-		Object[][] output = {nameFiles(location),dates,version};
-		return output;
+		String[][] mix = new String[files.length][3];
+		for (int i = 0; i < files.length; i++) {
+			mix[i][0] = names[i];
+			mix[i][1] = dates[i];
+			mix[i][2] = version[i];
+		}
+		return mix;
 	}
 
 	public static void setupGui() {
@@ -400,8 +437,8 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		}
 		return file.delete();
 	}
-	
-	public static String[] nameFiles(String path){
+
+	public static String[] nameFiles(String path) {
 		return new File(path).isDirectory() ? new File(path).list() : null;
 	}
 
