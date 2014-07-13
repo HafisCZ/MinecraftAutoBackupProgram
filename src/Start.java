@@ -56,7 +56,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 
 	public static String filename;
 
-	public static String[] cols = { "Backup", "Date", "Version" };// TODO
+	public static String[] cols = { "Backup", "Date", "Size" };// TODO
 	public static Object[][] previousData;
 	public static JButton browse;
 	public static JButton use;
@@ -453,17 +453,17 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		DateFormat dateFormat = new SimpleDateFormat("dd MM yy HH:mm:ss");
 		File[] files = listFiles(location);
 		String[] dates = new String[files.length];
-		String[] version = new String[files.length];
+		long[] size = new long[files.length];
 		String[] names = nameFiles(location);
 		for (int i = 0; i < files.length; i++) {
 			dates[i] = dateFormat.format(files[i].lastModified());
-			version[i] = "Unknown";
+			size[i] = files[i].length();
 		}
-		String[][] mix = new String[files.length][3];
+		Object[][] mix = new Object[files.length][3];
 		for (int i = 0; i < files.length; i++) {
 			mix[i][0] = names[i];
 			mix[i][1] = dates[i];
-			mix[i][2] = version[i];
+			mix[i][2] = ((size[i] / 1024) < 1) ? size[i] + " B" : (((size[i] / 1048576) < 1) ? size[i] / 1024 + " kB" : size[i] / 1048576 + " MB");
 		}
 		return mix;
 	}
