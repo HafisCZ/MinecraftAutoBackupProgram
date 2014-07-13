@@ -28,5 +28,5 @@ HOW TO: RETRIEVE
 - Simply choose or write the path to your save folder as i written up there if you didn't do that before.
 - Now click on red 'Load' button and choose desired backup file which from you want to retrieve the save/saves.
 
-You can also list through all created backups and delete them too. The list will provide a view of all there placed backups, their last date of modify and also in next updates the version of minecraft, where they were open last.
+You can also list through all created backups and delete them too. The list will provide a view of all there placed backups, their last date of modify and also a size of all displayed backups.
 If you need, you can also change the source for backups, if you want to load from other folder that the output folder.
