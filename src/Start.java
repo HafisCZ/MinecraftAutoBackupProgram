@@ -356,6 +356,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 									delete(new File(in1.getText()));
 									ZipFile zipFile = new ZipFile(path);
 									zipFile.extractAll(in1.getText().substring(0, in1.getText().lastIndexOf("\\")));
+									JOptionPane.showMessageDialog(null, "Backup file loaded :\n" + path, "Load completed", JOptionPane.PLAIN_MESSAGE);
 								}
 							} catch (Exception j) {
 								j.printStackTrace();
@@ -463,7 +464,9 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		for (int i = 0; i < files.length; i++) {
 			mix[i][0] = names[i];
 			mix[i][1] = dates[i];
-			mix[i][2] = ((size[i] / 1024) < 1) ? size[i] + " B" : (((size[i] / 1048576) < 1) ? size[i] / 1024 + " kB" : size[i] / 1048576 + " MB");
+			mix[i][2] = ((size[i] / 1024) < 1) ? size[i] + " B" : (((size[i] / 1048576) < 1) ? size[i] / 1024 + ","
+					+ (int) Math.ceil(((size[i] % 1024) * 1000) / 1000) + " kB" : size[i] / 1048576 + "," + (int) Math.ceil(((size[i] / 1024) * 1000) / 1000)
+					+ " MB");
 		}
 		return mix;
 	}
