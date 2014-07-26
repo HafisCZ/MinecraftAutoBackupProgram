@@ -86,6 +86,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 	public static JButton loadBackup;
 	public static JButton saveData;
 	public static JButton playGame;
+	public static JButton renameBackup;
 
 	public Start() {
 		this.setFocusable(false);
@@ -95,16 +96,10 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 			if (new File("data.nfo").isFile()) {
 				String datas = new String(Files.readAllBytes(Paths.get("data.nfo")));
 				data = datas.split("\\|");
-				if (data.length == 3) {
-					folder_save = data[0].toString();
-					folder_backup = data[1].toString();
-					folder_game = data[2].toString();
-				} else if (data.length == 4) {
-					folder_save = data[0].toString();
-					folder_backup = data[1].toString();
-					folder_game = data[2].toString();
-					timebackup_split = data[3].toString();
-				}
+				if (data.length >= 1) folder_save = data[0].toString();
+				if (data.length >= 2) folder_backup = data[1].toString();
+				if (data.length >= 3) folder_game = data[2].toString();
+				if (data.length >= 4) timebackup_split = data[3].toString();
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -118,7 +113,9 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 			playGame.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					try {
-						new ProcessBuilder(folder_game).start();
+						if (new File(folder_game).isFile()) {
+							new ProcessBuilder(folder_game).start();
+						}
 					} catch (Exception f) {
 						f.printStackTrace();
 					}
@@ -190,56 +187,62 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		pane.setLayout(new BoxLayout(pane, BoxLayout.PAGE_AXIS));
 
 		JPanel pathes = new JPanel();
-		pathes.setLayout(new BoxLayout(pathes, BoxLayout.PAGE_AXIS));
+		pathes.setLayout(new FlowLayout());
 		pathes.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Paths"));
 		{
 			JPanel sub1 = new JPanel();
-			sub1.setLayout(new FlowLayout());
+			sub1.setLayout(new BoxLayout(sub1, BoxLayout.PAGE_AXIS));
 			{
 				JLabel lb1 = new JLabel("Save Folder:");
 				lb1.setFont(getFont().deriveFont(17.0f));
-				in1 = new JTextField();
-				in1.setText(null);
-				in1.setColumns(20);
-				in1.setFont(getFont().deriveFont(14.0f));
-				b1 = new JButton("...");
 				sub1.add(lb1);
-				sub1.add(in1);
-				sub1.add(b1);
+				JLabel lb2 = new JLabel("Backup Folder:");
+				lb2.setFont(getFont().deriveFont(17.0f));
+				sub1.add(lb2);
+				JLabel lb3 = new JLabel("Game:");
+				lb3.setFont(getFont().deriveFont(17.0f));
+				sub1.add(lb3);
 			}
 			pathes.add(sub1);
 
 			JPanel sub2 = new JPanel();
-			sub2.setLayout(new FlowLayout());
+			sub2.setLayout(new BoxLayout(sub2, BoxLayout.PAGE_AXIS));
 			{
-				JLabel lb2 = new JLabel("Save Folder:");
-				lb2.setFont(getFont().deriveFont(17.0f));
+				in1 = new JTextField();
+				in1.setText(folder_save);
+				in1.setColumns(30);
+				in1.setFont(getFont().deriveFont(14.0f));
+				sub2.add(in1);
 				in2 = new JTextField();
-				in2.setText(null);
-				in2.setColumns(20);
+				in2.setText(folder_backup);
+				in2.setColumns(30);
 				in2.setFont(getFont().deriveFont(14.0f));
-				b2 = new JButton("...");
-				sub2.add(lb2);
 				sub2.add(in2);
-				sub2.add(b2);
+				in3 = new JTextField();
+				in3.setText(folder_game);
+				in3.setColumns(30);
+				in3.setFont(getFont().deriveFont(14.0f));
+				sub2.add(in3);
 			}
 			pathes.add(sub2);
 
 			JPanel sub3 = new JPanel();
-			sub3.setLayout(new FlowLayout());
+			sub3.setLayout(new BoxLayout(sub3, BoxLayout.PAGE_AXIS));
 			{
-				JLabel lb3 = new JLabel("Save Folder:");
-				lb3.setFont(getFont().deriveFont(17.0f));
-				in3 = new JTextField();
-				in3.setText(null);
-				in3.setColumns(20);
-				in3.setFont(getFont().deriveFont(14.0f));
+				b1 = new JButton("...");
+
+				sub3.add(b1);
+
+				b2 = new JButton("...");
+
+				sub3.add(b2);
+
 				b3 = new JButton("...");
-				sub3.add(lb3);
-				sub3.add(in3);
+
 				sub3.add(b3);
 			}
 			pathes.add(sub3);
+
 		}
 		pane.add(pathes);
 
@@ -259,7 +262,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 			l1.setFont(getFont().deriveFont(17.0f));
 			sub4.add(l1);
 			in4 = new JTextField();
-			in4.setText(null);
+			in4.setText(timebackup_split);
 			in4.setColumns(10);
 			in4.setFont(getFont().deriveFont(14.0f));
 			in4.setEnabled(time_enabled);
@@ -392,6 +395,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		saveData.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
+					System.out.println("Written");
 					BufferedWriter w = new BufferedWriter(new FileWriter("data.nfo"));
 					w.write(folder_save + "|" + folder_backup + "|" + folder_game + "|" + timebackup_split);
 					w.close();
@@ -425,6 +429,8 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 			buttons.add(browse);
 			use = new JButton("Load");
 			buttons.add(use);
+			renameBackup = new JButton("Rename");
+			buttons.add(renameBackup);
 			remove = new JButton("Remove");
 			buttons.add(remove);
 			browse.addActionListener(new ActionListener() {
@@ -472,6 +478,16 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 							zipFile.extractAll(folder_save.substring(0, folder_save.lastIndexOf("\\")));
 							JOptionPane.showMessageDialog(null, "Backup file loaded :\n" + path, "Load completed", JOptionPane.PLAIN_MESSAGE);
 						}
+					} catch (Exception j) {
+						j.printStackTrace();
+					}
+				}
+			});
+			// Changes name of selected file
+			renameBackup.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					try {
+						// TODO RENAME
 					} catch (Exception j) {
 						j.printStackTrace();
 					}
