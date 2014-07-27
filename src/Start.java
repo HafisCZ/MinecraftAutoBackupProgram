@@ -487,7 +487,15 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 			renameBackup.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					try {
-						// TODO RENAME
+						Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
+						String path = folder_backup + "\\" + selected;
+						String newName = JOptionPane.showInputDialog(null, "Enter new name for file: ", "Rename file: "
+								+ selected, JOptionPane.PLAIN_MESSAGE);
+						if (newName != "") {
+							File sel = new File(path);
+							sel.renameTo(new File(folder_backup + "\\" + newName));
+						}
+						updateTable();
 					} catch (Exception j) {
 						j.printStackTrace();
 					}
