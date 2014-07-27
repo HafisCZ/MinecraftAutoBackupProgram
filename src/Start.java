@@ -44,8 +44,8 @@ import net.lingala.zip4j.util.Zip4jConstants;
 public class Start extends JPanel implements PropertyChangeListener, ActionListener {
 
 	/**
-	 * All rights reserved! Email: mar00m@seznam.cz Actually, my name is mar21, but friends call me Hafis. So, a man with name Hafis_CZ could be me.
-	 * ;) Thanks.
+	 * Warning: I don't care about any errors caused to your backed saves using modified version of this program. Every version I release is stable
+	 * and I am using everytime the latest version.
 	 */
 
 	private static final long serialVersionUID = 1L;
@@ -173,6 +173,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 				public void actionPerformed(ActionEvent e) {
 					timebackup_running = !timebackup_running;
 					if (timebackup_running == true) {
+						new BackupTimer(timebackup_split);
 						timebackupSwitch.setText("Stop");
 					} else {
 						timebackupSwitch.setText("Start");
