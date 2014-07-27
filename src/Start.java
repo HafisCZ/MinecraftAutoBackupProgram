@@ -1,4 +1,3 @@
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -57,6 +56,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 	public static JTextField in4;
 
 	public static boolean time_enabled = false;
+	public static boolean cloud_enabled = false;
 
 	public static String filename;
 
@@ -66,7 +66,6 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 	public static String timebackup_split = "";
 
 	public static String[] cols = { "Sync", "Name", "Date", "Size" };
-	public static Object[][] previousData;
 	public static JButton browse;
 	public static JButton use;
 	public static JButton remove;
@@ -87,6 +86,11 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 	public static JButton saveData;
 	public static JButton playGame;
 	public static JButton renameBackup;
+
+	public static JButton uploadCloud; // Upload to cloud
+	public static JButton removeCloud; // Remove from cloud
+	public static JButton downloadCloud; // Download from cloud
+	public static JButton refreshCloud; // Refresh list of files from cloud
 
 	public Start() {
 		this.setFocusable(false);
@@ -412,19 +416,19 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 	public JPanel setupP1() { // TODO PANE_BACKUPS
 		JPanel pane = new JPanel();
 		try {
-			pane.setLayout(new BorderLayout());
+			pane.setLayout(new BoxLayout(pane, BoxLayout.PAGE_AXIS));
 			JPanel listing = new JPanel();
-			pane.add(listing, BorderLayout.CENTER);
+			pane.add(listing);
 			table = new JTable();
 			table.setModel(new DefaultTableModel(getDatabase(folder_backup), cols));
-			table.setPreferredScrollableViewportSize(new Dimension(570, 200));
+			table.setPreferredScrollableViewportSize(new Dimension(570, 150));
 			table.setFillsViewportHeight(true);
 			table.getColumnModel().getColumn(0).setPreferredWidth(1);
 			JScrollPane slr = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 			listing.add(slr);
-			JPanel buttons = new JPanel(new FlowLayout());
-			previousData = getDatabase(folder_backup);
-			pane.add(buttons, BorderLayout.PAGE_END);
+			JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER));
+			buttons.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Local"));
+			pane.add(buttons);
 			browse = new JButton("...");
 			buttons.add(browse);
 			use = new JButton("Load");
@@ -433,6 +437,21 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 			buttons.add(renameBackup);
 			remove = new JButton("Remove");
 			buttons.add(remove);
+			JPanel buttons2 = new JPanel(new FlowLayout(FlowLayout.CENTER));
+			buttons2.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Cloud"));
+			pane.add(buttons2);
+			refreshCloud = new JButton("Refresh");
+			refreshCloud.setEnabled(cloud_enabled);
+			buttons2.add(refreshCloud);
+			uploadCloud = new JButton("Upload");
+			uploadCloud.setEnabled(cloud_enabled);
+			buttons2.add(uploadCloud);
+			removeCloud = new JButton("Remove");
+			removeCloud.setEnabled(cloud_enabled);
+			buttons2.add(removeCloud);
+			downloadCloud = new JButton("Download");
+			downloadCloud.setEnabled(cloud_enabled);
+			buttons2.add(downloadCloud);
 			browse.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					try {
@@ -489,8 +508,8 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 					try {
 						Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
 						String path = folder_backup + "\\" + selected;
-						String newName = JOptionPane.showInputDialog(null, "Enter new name for file: ", "Rename file: "
-								+ selected, JOptionPane.PLAIN_MESSAGE);
+						String newName = JOptionPane.showInputDialog(null, "Enter new name for file: ", "Rename file: " + selected,
+								JOptionPane.PLAIN_MESSAGE);
 						if (newName != "") {
 							File sel = new File(path);
 							sel.renameTo(new File(folder_backup + "\\" + newName));
