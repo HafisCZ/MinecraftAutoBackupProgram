@@ -25,9 +25,11 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.EtchedBorder;
@@ -53,9 +55,13 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 	public static JTextField in1;
 	public static JTextField in2;
 	public static JTextField in3;
-	public static JTextField in4;
 
-	public static boolean time_enabled = false;
+	public static JSpinner timebackup_seconds;
+	public static JSpinner timebackup_minutes;
+	public static JSpinner timebackup_hours;
+	public static JButton timebackupSwitch;
+
+	public static boolean time_enabled = true;
 	public static boolean cloud_enabled = false;
 
 	public static String filename;
@@ -63,7 +69,8 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 	public static String folder_backup = "";
 	public static String folder_save = "";
 	public static String folder_game = "";
-	public static String timebackup_split = "";
+	public static Integer timebackup_split = 0;
+	public static boolean timebackup_running = false;
 
 	public static String[] cols = { "Sync", "Name", "Date", "Size" };
 	public static JButton browse;
@@ -79,7 +86,6 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 	public static JButton b3;
 
 	public static String[] data;
-	public static String datas;
 
 	public static JButton createBackup;
 	public static JButton loadBackup;
@@ -103,7 +109,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 				if (data.length >= 1) folder_save = data[0].toString();
 				if (data.length >= 2) folder_backup = data[1].toString();
 				if (data.length >= 3) folder_game = data[2].toString();
-				if (data.length >= 4) timebackup_split = data[3].toString();
+				if (data.length >= 4) timebackup_split = Integer.parseInt(data[3]);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -158,6 +164,22 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 				}
 			});
 			subPanel.add(createBackup);
+			// Starts or stops the automatic backup cycle
+			timebackupSwitch = new JButton("Start");
+			timebackupSwitch.setFont(getFont().deriveFont(15.0f));
+			timebackupSwitch.setForeground(Color.BLACK);
+			timebackupSwitch.setEnabled(time_enabled);
+			timebackupSwitch.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					timebackup_running = !timebackup_running;
+					if (timebackup_running == true) {
+						timebackupSwitch.setText("Stop");
+					} else {
+						timebackupSwitch.setText("Start");
+					}
+				}
+			});
+			subPanel.add(timebackupSwitch);
 		}
 		this.add(subPanel);
 		// Creates a Tabbed pane
@@ -265,19 +287,28 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 			JLabel l1 = new JLabel("Split: ");
 			l1.setFont(getFont().deriveFont(17.0f));
 			sub4.add(l1);
-			in4 = new JTextField();
-			in4.setText(timebackup_split);
-			in4.setColumns(10);
-			in4.setFont(getFont().deriveFont(14.0f));
-			in4.setEnabled(time_enabled);
-			sub4.add(in4);
+			sub4.add(new JLabel("Hours:"));
+			timebackup_hours = new JSpinner(new SpinnerNumberModel(0, 0, 23, 1));
+			timebackup_hours.setEnabled(time_enabled);
+			sub4.add(timebackup_hours);
+			sub4.add(new JLabel("Mins:"));
+			timebackup_minutes = new JSpinner(new SpinnerNumberModel(0, 0, 95, 1));
+			timebackup_minutes.setEnabled(time_enabled);
+			sub4.add(timebackup_minutes);
+			sub4.add(new JLabel("Secs:"));
+			timebackup_seconds = new JSpinner(new SpinnerNumberModel(0, 0, 59, 1));
+			timebackup_seconds.setEnabled(time_enabled);
+			sub4.add(timebackup_seconds);
 		}
 		pane.add(sub4);
 
 		in1.setText(folder_save);
 		in2.setText(folder_backup);
 		in3.setText(folder_game);
-		in4.setText(timebackup_split);
+
+		timebackup_seconds.setValue((int) (timebackup_split % 60));
+		timebackup_minutes.setValue((int) ((timebackup_split % 3600) / 60));
+		timebackup_hours.setValue((int) (timebackup_split / 3600));
 
 		in1.getDocument().addDocumentListener(new DocumentListener() {
 			public void changedUpdate(DocumentEvent e) {
@@ -308,20 +339,6 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		});
 
 		in3.getDocument().addDocumentListener(new DocumentListener() {
-			public void changedUpdate(DocumentEvent e) {
-				update();
-			}
-
-			public void removeUpdate(DocumentEvent e) {
-				update();
-			}
-
-			public void insertUpdate(DocumentEvent e) {
-				update();
-			}
-		});
-
-		in4.getDocument().addDocumentListener(new DocumentListener() {
 			public void changedUpdate(DocumentEvent e) {
 				update();
 			}
@@ -399,9 +416,9 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		saveData.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
-					System.out.println("Written");
+					update();
 					BufferedWriter w = new BufferedWriter(new FileWriter("data.nfo"));
-					w.write(folder_save + "|" + folder_backup + "|" + folder_game + "|" + timebackup_split);
+					w.write(folder_save + "|" + folder_backup + "|" + folder_game + "|" + timebackup_split.toString());
 					w.close();
 				} catch (Exception j) {
 					j.printStackTrace();
@@ -530,7 +547,8 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		folder_save = in1.getText();
 		folder_backup = in2.getText();
 		folder_game = in3.getText();
-		timebackup_split = in4.getText();
+		timebackup_split = (Integer) timebackup_seconds.getValue() + (Integer) timebackup_minutes.getValue() * 60
+				+ (Integer) timebackup_hours.getValue() * 3600;
 		updateTable();
 	}
 
