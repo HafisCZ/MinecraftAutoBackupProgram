@@ -48,53 +48,50 @@ public class Start extends JPanel {
 
 	private static final long serialVersionUID = 1L;
 
-	public static JFrame frame2;
-
-	public static JTextField in1;
-	public static JTextField in2;
-	public static JTextField in3;
-
-	public static JSpinner timebackup_seconds;
-	public static JSpinner timebackup_minutes;
-	public static JSpinner timebackup_hours;
-	public static JButton timebackupSwitch;
-
-	public static boolean time_enabled = false;
-	public static boolean cloud_enabled = false;
-
 	public static String filename;
 
-	public static String folder_backup = "";
-	public static String folder_save = "";
-	public static String folder_game = "";
-	public static Integer timebackup_split = 1;
-	public static boolean timebackup_running = false;
+	// WINDOW VARIABLES
+	public static JButton window_createBackup;
+	public static JButton window_playGame;
 
-	public static String[] cols = { "Sync", "Name", "Date", "Size" };
-	public static JButton browse;
-	public static JButton use;
-	public static JButton remove;
-	public static String backupPath;
+	// TABLE VARIABLES
+	public static String[] table_columns = { "Sync", "Name", "Date", "Size" };
 	public static JTable table;
 
-	public static JCheckBox m1;
+	// BACKUP MANAGER VARIABLES
+	public static JButton manager_loadOther;
+	public static JButton manager_use;
+	public static JButton manager_remove;
+	public static JButton manager_rename;
 
-	public static JButton b1;
-	public static JButton b2;
-	public static JButton b3;
+	// TIMEBACKUP VARIABLES
+	public static boolean time_enabled = false;
+	public static boolean time_running = false;
+	public static Integer time_split = 1;
+	public static JCheckBox time_checkboxEnable;
+	public static JSpinner time_spinnerSeconds;
+	public static JSpinner time_spinnerMinutes;
+	public static JSpinner time_spinnerHours;
+	public static JButton time_buttonStart;
 
-	public static String[] data;
+	// PATH VARIABLES
+	public static String path_save = "";
+	public static String path_backup = "";
+	public static String path_game = "";
+	public static JButton path_saveBrowse;
+	public static JButton path_backupBrowse;
+	public static JButton path_gameBrowse;
+	public static JButton path_savePaths;
+	public static JTextField path_saveField;
+	public static JTextField path_backupField;
+	public static JTextField path_gameField;
 
-	public static JButton createBackup;
-	public static JButton loadBackup;
-	public static JButton saveData;
-	public static JButton playGame;
-	public static JButton renameBackup;
-
-	public static JButton uploadCloud; // Upload to cloud
-	public static JButton removeCloud; // Remove from cloud
-	public static JButton downloadCloud; // Download from cloud
-	public static JButton refreshCloud; // Refresh list of files from cloud
+	// CLOUD VARIABLES
+	public static boolean cloud_enabled = false;
+	public static JButton cloud_upload;
+	public static JButton cloud_remove;
+	public static JButton cloud_download;
+	public static JButton cloud_refresh;
 
 	public Start() {
 		this.setFocusable(false);
@@ -103,14 +100,14 @@ public class Start extends JPanel {
 		try {
 			if (new File("data.nfo").isFile()) {
 				String datas = new String(Files.readAllBytes(Paths.get("data.nfo")));
-				data = datas.split("\\|");
-				if (data.length >= 1) folder_save = data[0].toString();
-				if (data.length >= 2) folder_backup = data[1].toString();
-				if (data.length >= 3) folder_game = data[2].toString();
+				String[] data = datas.split("\\|");
+				if (data.length >= 1) path_save = data[0].toString();
+				if (data.length >= 2) path_backup = data[1].toString();
+				if (data.length >= 3) path_game = data[2].toString();
 				if (data.length >= 5) {
 					time_enabled = Boolean.parseBoolean(data[3]);
-					timebackup_split = Integer.parseInt(data[4]);
-					if (timebackup_split.equals(0)) timebackup_split++;
+					time_split = Integer.parseInt(data[4]);
+					if (time_split.equals(0)) time_split++;
 				}
 			}
 		} catch (Exception e) {
@@ -119,37 +116,37 @@ public class Start extends JPanel {
 		JPanel subPanel = new JPanel(new FlowLayout());
 		{
 			// Play button will launch the Game if path to .exe file is specified
-			playGame = new JButton("Play");
-			playGame.setFont(getFont().deriveFont(15.0f));
-			playGame.setForeground(Color.BLACK);
-			playGame.addActionListener(new ActionListener() {
+			window_playGame = new JButton("Play");
+			window_playGame.setFont(getFont().deriveFont(15.0f));
+			window_playGame.setForeground(Color.BLACK);
+			window_playGame.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					try {
-						if (new File(folder_game).isFile()) {
-							new ProcessBuilder(folder_game).start();
+						if (new File(path_game).isFile()) {
+							new ProcessBuilder(path_game).start();
 						}
 					} catch (Exception f) {
 						f.printStackTrace();
 					}
 				}
 			});
-			subPanel.add(playGame);
+			subPanel.add(window_playGame);
 			// Create button creates a new backup if path to save file is specified
-			createBackup = new JButton("Create Backup");
-			createBackup.setFont(getFont().deriveFont(15.0f));
-			createBackup.setForeground(new Color(0, 200, 10));
-			createBackup.addActionListener(new ActionListener() {
+			window_createBackup = new JButton("Create Backup");
+			window_createBackup.setFont(getFont().deriveFont(15.0f));
+			window_createBackup.setForeground(new Color(0, 200, 10));
+			window_createBackup.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					try {
 						Calendar cal = Calendar.getInstance();
 						DateFormat dateFormat = new SimpleDateFormat("yy_MM_dd");
-						filename = folder_backup + "\\backup" + "_" + dateFormat.format(cal.getTime()) + ".zip";
-						if (new File(folder_backup + "\\backup" + "_" + dateFormat.format(cal.getTime()) + ".zip").isFile()) {
+						filename = path_backup + "\\backup" + "_" + dateFormat.format(cal.getTime()) + ".zip";
+						if (new File(path_backup + "\\backup" + "_" + dateFormat.format(cal.getTime()) + ".zip").isFile()) {
 							for (int i = 1;; i++) {
-								if (new File(folder_backup + "\\backup" + "_" + dateFormat.format(cal.getTime()) + "_" + i + ".zip").isFile()) {
+								if (new File(path_backup + "\\backup" + "_" + dateFormat.format(cal.getTime()) + "_" + i + ".zip").isFile()) {
 									continue;
 								}
-								filename = folder_backup + "\\backup" + "_" + dateFormat.format(cal.getTime()) + "_" + i + ".zip";
+								filename = path_backup + "\\backup" + "_" + dateFormat.format(cal.getTime()) + "_" + i + ".zip";
 								break;
 							}
 						}
@@ -157,32 +154,32 @@ public class Start extends JPanel {
 						ZipParameters parameters = new ZipParameters();
 						parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
 						parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
-						zipFile.createZipFileFromFolder(folder_save, parameters, false, 10485760);
-						updateTable();
+						zipFile.createZipFileFromFolder(path_save, parameters, false, 10485760);
+						updateTable(path_backup);
 					} catch (Exception j) {
 					} finally {
 						JOptionPane.showMessageDialog(null, "Backup file created :\n" + filename, "Backup completed", JOptionPane.PLAIN_MESSAGE);
 					}
 				}
 			});
-			subPanel.add(createBackup);
+			subPanel.add(window_createBackup);
 			// Starts or stops the automatic backup cycle
-			timebackupSwitch = new JButton("Start");
-			timebackupSwitch.setFont(getFont().deriveFont(15.0f));
-			timebackupSwitch.setForeground(Color.BLACK);
-			timebackupSwitch.setEnabled(time_enabled);
-			timebackupSwitch.addActionListener(new ActionListener() {
+			time_buttonStart = new JButton("Start");
+			time_buttonStart.setFont(getFont().deriveFont(15.0f));
+			time_buttonStart.setForeground(Color.BLACK);
+			time_buttonStart.setEnabled(time_enabled);
+			time_buttonStart.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
-					timebackup_running = !timebackup_running;
-					if (timebackup_running == true) {
-						new TimebackupService(timebackup_split);
-						timebackupSwitch.setText("Stop");
+					time_running = !time_running;
+					if (time_running == true) {
+						new TimebackupService(time_split);
+						time_buttonStart.setText("Stop");
 					} else {
-						timebackupSwitch.setText("Start");
+						time_buttonStart.setText("Start");
 					}
 				}
 			});
-			subPanel.add(timebackupSwitch);
+			subPanel.add(time_buttonStart);
 		}
 		this.add(subPanel);
 		// Creates a Tabbed pane
@@ -197,11 +194,11 @@ public class Start extends JPanel {
 		this.add(mainWindow);
 	}
 
-	public static void updateTable() {
+	public static void updateTable(String backups) {
 		DefaultTableModel dm = (DefaultTableModel) table.getModel();
 		dm.getDataVector().removeAllElements();
 		dm.fireTableDataChanged();
-		table.setModel(new DefaultTableModel(getDatabase(folder_backup), cols));
+		table.setModel(new DefaultTableModel(getDatabase(backups), table_columns));
 		table.getColumnModel().getColumn(0).setPreferredWidth(1);
 	}
 
@@ -238,38 +235,38 @@ public class Start extends JPanel {
 			JPanel sub2 = new JPanel();
 			sub2.setLayout(new BoxLayout(sub2, BoxLayout.PAGE_AXIS));
 			{
-				in1 = new JTextField();
-				in1.setText(folder_save);
-				in1.setColumns(30);
-				in1.setFont(getFont().deriveFont(14.0f));
-				sub2.add(in1);
-				in2 = new JTextField();
-				in2.setText(folder_backup);
-				in2.setColumns(30);
-				in2.setFont(getFont().deriveFont(14.0f));
-				sub2.add(in2);
-				in3 = new JTextField();
-				in3.setText(folder_game);
-				in3.setColumns(30);
-				in3.setFont(getFont().deriveFont(14.0f));
-				sub2.add(in3);
+				path_saveField = new JTextField();
+				path_saveField.setText(path_save);
+				path_saveField.setColumns(30);
+				path_saveField.setFont(getFont().deriveFont(14.0f));
+				sub2.add(path_saveField);
+				path_backupField = new JTextField();
+				path_backupField.setText(path_backup);
+				path_backupField.setColumns(30);
+				path_backupField.setFont(getFont().deriveFont(14.0f));
+				sub2.add(path_backupField);
+				path_gameField = new JTextField();
+				path_gameField.setText(path_game);
+				path_gameField.setColumns(30);
+				path_gameField.setFont(getFont().deriveFont(14.0f));
+				sub2.add(path_gameField);
 			}
 			pathes.add(sub2);
 
 			JPanel sub3 = new JPanel();
 			sub3.setLayout(new BoxLayout(sub3, BoxLayout.PAGE_AXIS));
 			{
-				b1 = new JButton("...");
+				path_saveBrowse = new JButton("...");
 
-				sub3.add(b1);
+				sub3.add(path_saveBrowse);
 
-				b2 = new JButton("...");
+				path_backupBrowse = new JButton("...");
 
-				sub3.add(b2);
+				sub3.add(path_backupBrowse);
 
-				b3 = new JButton("...");
+				path_gameBrowse = new JButton("...");
 
-				sub3.add(b3);
+				sub3.add(path_gameBrowse);
 			}
 			pathes.add(sub3);
 
@@ -282,44 +279,44 @@ public class Start extends JPanel {
 		sub4.setLayout(new FlowLayout());
 		sub4.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Auto-Backup"));
 		{
-			m1 = new JCheckBox();
-			m1.setActionCommand("1");
-			m1.setText("Enabled");
-			m1.setFont(getFont().deriveFont(17.0f));
-			m1.setSelected(time_enabled);
-			m1.addActionListener(new ActionListener() {
+			time_checkboxEnable = new JCheckBox();
+			time_checkboxEnable.setActionCommand("1");
+			time_checkboxEnable.setText("Enabled");
+			time_checkboxEnable.setFont(getFont().deriveFont(17.0f));
+			time_checkboxEnable.setSelected(time_enabled);
+			time_checkboxEnable.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
 					update();
 				}
 			});
-			sub4.add(m1);
+			sub4.add(time_checkboxEnable);
 			JLabel l1 = new JLabel("Split: ");
 			l1.setFont(getFont().deriveFont(17.0f));
 			sub4.add(l1);
 			sub4.add(new JLabel("Hours:"));
-			timebackup_hours = new JSpinner(new SpinnerNumberModel(0, 0, 23, 1));
-			timebackup_hours.setEnabled(time_enabled);
-			sub4.add(timebackup_hours);
+			time_spinnerHours = new JSpinner(new SpinnerNumberModel(0, 0, 23, 1));
+			time_spinnerHours.setEnabled(time_enabled);
+			sub4.add(time_spinnerHours);
 			sub4.add(new JLabel("Mins:"));
-			timebackup_minutes = new JSpinner(new SpinnerNumberModel(0, 0, 95, 1));
-			timebackup_minutes.setEnabled(time_enabled);
-			sub4.add(timebackup_minutes);
+			time_spinnerMinutes = new JSpinner(new SpinnerNumberModel(0, 0, 95, 1));
+			time_spinnerMinutes.setEnabled(time_enabled);
+			sub4.add(time_spinnerMinutes);
 			sub4.add(new JLabel("Secs:"));
-			timebackup_seconds = new JSpinner(new SpinnerNumberModel(1, 1, 59, 1));
-			timebackup_seconds.setEnabled(time_enabled);
-			sub4.add(timebackup_seconds);
+			time_spinnerSeconds = new JSpinner(new SpinnerNumberModel(1, 1, 59, 1));
+			time_spinnerSeconds.setEnabled(time_enabled);
+			sub4.add(time_spinnerSeconds);
 		}
 		pane.add(sub4);
 
-		in1.setText(folder_save);
-		in2.setText(folder_backup);
-		in3.setText(folder_game);
+		path_saveField.setText(path_save);
+		path_backupField.setText(path_backup);
+		path_gameField.setText(path_game);
 
-		timebackup_seconds.setValue((int) (timebackup_split % 60));
-		timebackup_minutes.setValue((int) ((timebackup_split % 3600) / 60));
-		timebackup_hours.setValue((int) (timebackup_split / 3600));
+		time_spinnerSeconds.setValue((int) (time_split % 60));
+		time_spinnerMinutes.setValue((int) ((time_split % 3600) / 60));
+		time_spinnerHours.setValue((int) (time_split / 3600));
 
-		in1.getDocument().addDocumentListener(new DocumentListener() {
+		path_saveField.getDocument().addDocumentListener(new DocumentListener() {
 			public void changedUpdate(DocumentEvent e) {
 				update();
 			}
@@ -333,7 +330,7 @@ public class Start extends JPanel {
 			}
 		});
 
-		in2.getDocument().addDocumentListener(new DocumentListener() {
+		path_backupField.getDocument().addDocumentListener(new DocumentListener() {
 			public void changedUpdate(DocumentEvent e) {
 				update();
 			}
@@ -347,7 +344,7 @@ public class Start extends JPanel {
 			}
 		});
 
-		in3.getDocument().addDocumentListener(new DocumentListener() {
+		path_gameField.getDocument().addDocumentListener(new DocumentListener() {
 			public void changedUpdate(DocumentEvent e) {
 				update();
 			}
@@ -361,7 +358,7 @@ public class Start extends JPanel {
 			}
 		});
 
-		b1.addActionListener(new ActionListener() {
+		path_saveBrowse.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					JFileChooser chooser = new JFileChooser();
@@ -371,8 +368,8 @@ public class Start extends JPanel {
 					chooser.setFileHidingEnabled(false);
 					chooser.setAcceptAllFileFilterUsed(false);
 					if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-						folder_save = (chooser.getSelectedFile()).toString();
-						in1.setText(folder_save);
+						path_save = (chooser.getSelectedFile()).toString();
+						path_saveField.setText(path_save);
 					} else {
 					}
 
@@ -381,7 +378,7 @@ public class Start extends JPanel {
 			}
 		});
 
-		b2.addActionListener(new ActionListener() {
+		path_backupBrowse.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					JFileChooser chooser = new JFileChooser();
@@ -391,8 +388,8 @@ public class Start extends JPanel {
 					chooser.setFileHidingEnabled(false);
 					chooser.setAcceptAllFileFilterUsed(false);
 					if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-						folder_backup = (chooser.getSelectedFile()).toString();
-						in2.setText(folder_backup);
+						path_backup = (chooser.getSelectedFile()).toString();
+						path_backupField.setText(path_backup);
 					} else {
 					}
 				} catch (Exception j) {
@@ -400,7 +397,7 @@ public class Start extends JPanel {
 			}
 		});
 
-		b3.addActionListener(new ActionListener() {
+		path_gameBrowse.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					JFileChooser chooser = new JFileChooser();
@@ -410,8 +407,8 @@ public class Start extends JPanel {
 					chooser.setFileHidingEnabled(false);
 					chooser.setAcceptAllFileFilterUsed(false);
 					if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-						folder_game = (chooser.getSelectedFile()).toString();
-						in3.setText(folder_game);
+						path_game = (chooser.getSelectedFile()).toString();
+						path_gameField.setText(path_game);
 					} else {
 					}
 				} catch (Exception j) {
@@ -419,22 +416,22 @@ public class Start extends JPanel {
 			}
 		});
 
-		saveData = new JButton("Save settings");
-		saveData.setFont(getFont().deriveFont(15.0f));
-		saveData.setForeground(Color.BLACK);
-		saveData.addActionListener(new ActionListener() {
+		path_savePaths = new JButton("Save settings");
+		path_savePaths.setFont(getFont().deriveFont(15.0f));
+		path_savePaths.setForeground(Color.BLACK);
+		path_savePaths.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					update();
 					BufferedWriter w = new BufferedWriter(new FileWriter("data.nfo"));
-					w.write(folder_save + "|" + folder_backup + "|" + folder_game + "|" + time_enabled + "|" + timebackup_split.toString());
+					w.write(path_save + "|" + path_backup + "|" + path_game + "|" + time_enabled + "|" + time_split.toString());
 					w.close();
 				} catch (Exception j) {
 					j.printStackTrace();
 				}
 			}
 		});
-		pane.add(saveData);
+		pane.add(path_savePaths);
 
 		return pane;
 	}
@@ -446,7 +443,7 @@ public class Start extends JPanel {
 			JPanel listing = new JPanel();
 			pane.add(listing);
 			table = new JTable();
-			table.setModel(new DefaultTableModel(getDatabase(folder_backup), cols));
+			table.setModel(new DefaultTableModel(getDatabase(path_backup), table_columns));
 			table.setPreferredScrollableViewportSize(new Dimension(570, 150));
 			table.setFillsViewportHeight(true);
 			table.getColumnModel().getColumn(0).setPreferredWidth(1);
@@ -455,41 +452,48 @@ public class Start extends JPanel {
 			JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER));
 			buttons.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Local"));
 			pane.add(buttons);
-			browse = new JButton("...");
-			buttons.add(browse);
-			use = new JButton("Load");
-			buttons.add(use);
-			renameBackup = new JButton("Rename");
-			buttons.add(renameBackup);
-			remove = new JButton("Remove");
-			buttons.add(remove);
+			manager_loadOther = new JButton("External Load");
+			buttons.add(manager_loadOther);
+			manager_use = new JButton("Load");
+			buttons.add(manager_use);
+			manager_rename = new JButton("Rename");
+			buttons.add(manager_rename);
+			manager_remove = new JButton("Remove");
+			buttons.add(manager_remove);
 			JPanel buttons2 = new JPanel(new FlowLayout(FlowLayout.CENTER));
 			buttons2.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Cloud"));
 			pane.add(buttons2);
-			refreshCloud = new JButton("Refresh");
-			refreshCloud.setEnabled(cloud_enabled);
-			buttons2.add(refreshCloud);
-			uploadCloud = new JButton("Upload");
-			uploadCloud.setEnabled(cloud_enabled);
-			buttons2.add(uploadCloud);
-			removeCloud = new JButton("Remove");
-			removeCloud.setEnabled(cloud_enabled);
-			buttons2.add(removeCloud);
-			downloadCloud = new JButton("Download");
-			downloadCloud.setEnabled(cloud_enabled);
-			buttons2.add(downloadCloud);
-			browse.addActionListener(new ActionListener() {
+			cloud_refresh = new JButton("Refresh");
+			cloud_refresh.setEnabled(cloud_enabled);
+			buttons2.add(cloud_refresh);
+			cloud_upload = new JButton("Upload");
+			cloud_upload.setEnabled(cloud_enabled);
+			buttons2.add(cloud_upload);
+			cloud_remove = new JButton("Remove");
+			cloud_remove.setEnabled(cloud_enabled);
+			buttons2.add(cloud_remove);
+			cloud_download = new JButton("Download");
+			cloud_download.setEnabled(cloud_enabled);
+			buttons2.add(cloud_download);
+			manager_loadOther.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					try {
 						JFileChooser chooser = new JFileChooser();
 						chooser.setCurrentDirectory(new java.io.File("."));
-						chooser.setDialogTitle("Choose folder with backups");
-						chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+						chooser.setDialogTitle("Choose backup to load");
+						chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 						chooser.setFileHidingEnabled(false);
 						chooser.setAcceptAllFileFilterUsed(false);
 						if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-							backupPath = (chooser.getSelectedFile()).toString();
-							updateTable();
+							String path = chooser.getSelectedFile().getCanonicalPath();
+							if (JOptionPane.showConfirmDialog(null, "Do you really want to retrieve files from backup ?"
+									+ "\nThis will remove all current files in specified path" + "\nand place there all files from :\n" + path,
+									"Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
+								delete(new File(path_save));
+								ZipFile zipFile = new ZipFile(path);
+								zipFile.extractAll(path_save.substring(0, path_save.lastIndexOf("\\")));
+								JOptionPane.showMessageDialog(null, "Backup file loaded :\n" + path, "Load completed", JOptionPane.PLAIN_MESSAGE);
+							}
 						}
 					} catch (Exception f) {
 						f.printStackTrace();
@@ -497,30 +501,30 @@ public class Start extends JPanel {
 				}
 			});
 			// Removes selected backup file
-			remove.addActionListener(new ActionListener() {
+			manager_remove.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					try {
 						Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
-						String deletepath = folder_backup + "\\" + selected;
+						String deletepath = path_backup + "\\" + selected;
 						delete(new File(deletepath));
-						updateTable();
+						updateTable(path_backup);
 					} catch (Exception j) {
 						j.printStackTrace();
 					}
 				}
 			});
 			// Loads selected backup file
-			use.addActionListener(new ActionListener() {
+			manager_use.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					try {
 						Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
-						String path = folder_backup + "\\" + selected;
+						String path = path_backup + "\\" + selected;
 						if (JOptionPane.showConfirmDialog(null, "Do you really want to retrieve files from backup ?"
 								+ "\nThis will remove all current files in specified path" + "\nand place there all files from :\n" + path,
 								"Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
-							delete(new File(folder_save));
+							delete(new File(path_save));
 							ZipFile zipFile = new ZipFile(path);
-							zipFile.extractAll(folder_save.substring(0, folder_save.lastIndexOf("\\")));
+							zipFile.extractAll(path_save.substring(0, path_save.lastIndexOf("\\")));
 							JOptionPane.showMessageDialog(null, "Backup file loaded :\n" + path, "Load completed", JOptionPane.PLAIN_MESSAGE);
 						}
 					} catch (Exception j) {
@@ -529,18 +533,18 @@ public class Start extends JPanel {
 				}
 			});
 			// Changes name of selected file
-			renameBackup.addActionListener(new ActionListener() {
+			manager_rename.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent e) {
 					try {
 						Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
-						String path = folder_backup + "\\" + selected;
+						String path = path_backup + "\\" + selected;
 						String newName = JOptionPane.showInputDialog(null, "Enter new name for file: ", "Rename file: " + selected,
 								JOptionPane.PLAIN_MESSAGE);
 						if (newName != "") {
 							File sel = new File(path);
-							sel.renameTo(new File(folder_backup + "\\" + newName));
+							sel.renameTo(new File(path_backup + "\\" + newName));
 						}
-						updateTable();
+						updateTable(path_backup);
 					} catch (Exception j) {
 						j.printStackTrace();
 					}
@@ -553,17 +557,17 @@ public class Start extends JPanel {
 	}
 
 	public static void update() {
-		folder_save = in1.getText();
-		folder_backup = in2.getText();
-		folder_game = in3.getText();
-		timebackup_split = (Integer) timebackup_seconds.getValue() + (Integer) timebackup_minutes.getValue() * 60
-				+ (Integer) timebackup_hours.getValue() * 3600;
-		time_enabled = m1.isSelected();
-		timebackupSwitch.setEnabled(time_enabled);
-		timebackup_hours.setEnabled(time_enabled);
-		timebackup_minutes.setEnabled(time_enabled);
-		timebackup_seconds.setEnabled(time_enabled);
-		updateTable();
+		path_save = path_saveField.getText();
+		path_backup = path_backupField.getText();
+		path_game = path_gameField.getText();
+		time_split = (Integer) time_spinnerSeconds.getValue() + (Integer) time_spinnerMinutes.getValue() * 60
+				+ (Integer) time_spinnerHours.getValue() * 3600;
+		time_enabled = time_checkboxEnable.isSelected();
+		time_buttonStart.setEnabled(time_enabled);
+		time_spinnerHours.setEnabled(time_enabled);
+		time_spinnerMinutes.setEnabled(time_enabled);
+		time_spinnerSeconds.setEnabled(time_enabled);
+		updateTable(path_backup);
 	}
 
 	public static void main(String[] args) {
