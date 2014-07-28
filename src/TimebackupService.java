@@ -9,11 +9,11 @@ import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.util.Zip4jConstants;
 
-public class BackupTimer {
+public class TimebackupService {
 
 	Timer backupTimer;
 
-	public BackupTimer(int seconds) {
+	public TimebackupService(int seconds) {
 		backupTimer = new Timer();
 		backupTimer.schedule(new runAutomatedBackup(), seconds * 1000);
 	}
@@ -44,7 +44,7 @@ public class BackupTimer {
 
 			}
 			backupTimer.cancel();
-			if (Start.timebackup_running) new BackupTimer(Start.timebackup_split);
+			if (Start.timebackup_running) new TimebackupService(Start.timebackup_split);
 		}
 	}
 }

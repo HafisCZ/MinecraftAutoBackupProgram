@@ -4,8 +4,6 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -41,7 +39,7 @@ import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.util.Zip4jConstants;
 
-public class Start extends JPanel implements PropertyChangeListener, ActionListener {
+public class Start extends JPanel {
 
 	/**
 	 * Warning: I don't care about any errors caused to your backed saves using modified version of this program. Every version I release is stable
@@ -61,7 +59,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 	public static JSpinner timebackup_hours;
 	public static JButton timebackupSwitch;
 
-	public static boolean time_enabled = true;
+	public static boolean time_enabled = false;
 	public static boolean cloud_enabled = false;
 
 	public static String filename;
@@ -69,7 +67,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 	public static String folder_backup = "";
 	public static String folder_save = "";
 	public static String folder_game = "";
-	public static Integer timebackup_split = 0;
+	public static Integer timebackup_split = 1;
 	public static boolean timebackup_running = false;
 
 	public static String[] cols = { "Sync", "Name", "Date", "Size" };
@@ -109,7 +107,11 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 				if (data.length >= 1) folder_save = data[0].toString();
 				if (data.length >= 2) folder_backup = data[1].toString();
 				if (data.length >= 3) folder_game = data[2].toString();
-				if (data.length >= 4) timebackup_split = Integer.parseInt(data[3]);
+				if (data.length >= 5) {
+					time_enabled = Boolean.parseBoolean(data[3]);
+					timebackup_split = Integer.parseInt(data[4]);
+					if (timebackup_split.equals(0)) timebackup_split++;
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -173,7 +175,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 				public void actionPerformed(ActionEvent e) {
 					timebackup_running = !timebackup_running;
 					if (timebackup_running == true) {
-						new BackupTimer(timebackup_split);
+						new TimebackupService(timebackup_split);
 						timebackupSwitch.setText("Stop");
 					} else {
 						timebackupSwitch.setText("Start");
@@ -191,6 +193,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		mainWindow.setMnemonicAt(1, KeyEvent.VK_NUMPAD2);
 		mainWindow.addTab("Cloud Connection", setupP3());
 		mainWindow.setMnemonicAt(2, KeyEvent.VK_NUMPAD3);
+		update();
 		this.add(mainWindow);
 	}
 
@@ -283,7 +286,12 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 			m1.setActionCommand("1");
 			m1.setText("Enabled");
 			m1.setFont(getFont().deriveFont(17.0f));
-			m1.setEnabled(time_enabled);
+			m1.setSelected(time_enabled);
+			m1.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent arg0) {
+					update();
+				}
+			});
 			sub4.add(m1);
 			JLabel l1 = new JLabel("Split: ");
 			l1.setFont(getFont().deriveFont(17.0f));
@@ -297,7 +305,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 			timebackup_minutes.setEnabled(time_enabled);
 			sub4.add(timebackup_minutes);
 			sub4.add(new JLabel("Secs:"));
-			timebackup_seconds = new JSpinner(new SpinnerNumberModel(0, 0, 59, 1));
+			timebackup_seconds = new JSpinner(new SpinnerNumberModel(1, 1, 59, 1));
 			timebackup_seconds.setEnabled(time_enabled);
 			sub4.add(timebackup_seconds);
 		}
@@ -419,7 +427,7 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 				try {
 					update();
 					BufferedWriter w = new BufferedWriter(new FileWriter("data.nfo"));
-					w.write(folder_save + "|" + folder_backup + "|" + folder_game + "|" + timebackup_split.toString());
+					w.write(folder_save + "|" + folder_backup + "|" + folder_game + "|" + time_enabled + "|" + timebackup_split.toString());
 					w.close();
 				} catch (Exception j) {
 					j.printStackTrace();
@@ -550,6 +558,11 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		folder_game = in3.getText();
 		timebackup_split = (Integer) timebackup_seconds.getValue() + (Integer) timebackup_minutes.getValue() * 60
 				+ (Integer) timebackup_hours.getValue() * 3600;
+		time_enabled = m1.isSelected();
+		timebackupSwitch.setEnabled(time_enabled);
+		timebackup_hours.setEnabled(time_enabled);
+		timebackup_minutes.setEnabled(time_enabled);
+		timebackup_seconds.setEnabled(time_enabled);
 		updateTable();
 	}
 
@@ -564,10 +577,10 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 	public static Object[][] getDatabase(String location) {
 		DateFormat dateFormat = new SimpleDateFormat("dd MM yy HH:mm:ss");
 		if (!new File(location).exists()) return new Object[][] { { "", "-", "", "" } };
-		File[] files = listFiles(location);
+		File[] files = getFileList(location);
 		String[] dates = new String[files.length];
 		long[] size = new long[files.length];
-		String[] names = nameFiles(location);
+		String[] names = getFileNameList(location);
 		for (int i = 0; i < files.length; i++) {
 			dates[i] = dateFormat.format(files[i].lastModified());
 			size[i] = files[i].length();
@@ -600,39 +613,26 @@ public class Start extends JPanel implements PropertyChangeListener, ActionListe
 		Frame.setVisible(true);
 	}
 
-	public void actionPerformed(ActionEvent e) {
-
-	}
-
-	@Override
-	public void propertyChange(PropertyChangeEvent evt) {
-
-	}
-
 	public static boolean delete(File file) {
-		File[] flist = null;
-		if (file == null) { return false; }
-		if (file.isFile()) { return file.delete(); }
-		if (!file.isDirectory()) { return false; }
-		flist = file.listFiles();
-		if (flist != null && flist.length > 0) {
-			for (File f : flist) {
-				if (!delete(f)) { return false; }
-			}
+		File[] list;
+		if (file.equals(null)) return false;
+		if (file.isFile()) return file.delete();
+		if (!file.isDirectory()) return false;
+		list = file.listFiles();
+		if (list != null && list.length > 0) {
+			for (File f : list)
+				if (!delete(f)) return false;
 		}
 		return file.delete();
 	}
 
-	public static String[] nameFiles(String path) {
+	public static String[] getFileNameList(String path) {
 		return new File(path).isDirectory() ? new File(path).list() : null;
 	}
 
-	public static File[] listFiles(String path) {
+	public static File[] getFileList(String path) {
 		File folder = new File(path);
-		if (folder.isDirectory()) {
-			File[] files = folder.listFiles();
-			return files;
-		}
+		if (folder.isDirectory()) return folder.listFiles();
 		return null;
 	}
 
