@@ -19,7 +19,7 @@ public class FTPService {
 
 	public FTPService(String server) throws Exception {
 		ftp = new FTPClient();
-		if (debug_enabled) ftp.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out)));
+		if (debug_enabled) ftp.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out), true));
 		ftp.connect(server);
 		int id = ftp.getReplyCode();
 		if (!FTPReply.isPositiveCompletion(id)) {
@@ -30,7 +30,7 @@ public class FTPService {
 
 	public FTPService(String server, int port) throws Exception {
 		ftp = new FTPClient();
-		if (debug_enabled) ftp.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out)));
+		if (debug_enabled) ftp.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out), true));
 		ftp.connect(server, port);
 		int id = ftp.getReplyCode();
 		if (!FTPReply.isPositiveCompletion(id)) {
@@ -53,6 +53,7 @@ public class FTPService {
 		OutputStream dataflow = new BufferedOutputStream(new FileOutputStream(new File(local_path)));
 		boolean return_id = ftp.retrieveFile(server_path, dataflow);
 		dataflow.close();
+		ftp.completePendingCommand();
 		return return_id;
 	}
 
@@ -60,6 +61,7 @@ public class FTPService {
 		try {
 			InputStream dataflow = new FileInputStream(new File(local_path));
 			ftp.storeFile(server_folder + server_name, dataflow);
+			ftp.completePendingCommand();
 			return true;
 		} catch (Exception e) {
 			return false;

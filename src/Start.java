@@ -93,6 +93,21 @@ public class Start extends JPanel {
 	public static JButton cloud_download;
 	public static JButton cloud_refresh;
 
+	// LISTENERS
+	public static DocumentListener changeListener = new DocumentListener() {
+		public void changedUpdate(DocumentEvent e) {
+			update();
+		}
+
+		public void removeUpdate(DocumentEvent e) {
+			update();
+		}
+
+		public void insertUpdate(DocumentEvent e) {
+			update();
+		}
+	};
+
 	public Start() {
 		this.setFocusable(false);
 		this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
@@ -204,7 +219,7 @@ public class Start extends JPanel {
 
 	public JPanel setupP3() { // TODO PANE_CLOUD
 		JPanel pane = new JPanel();
-		JLabel l = new JLabel("Work in Progress - Will be possibly available in future version");
+		JLabel l = new JLabel("Work in Progress - FTP side done, now workin' at UI and Google Drive access");
 		pane.add(l);
 		return pane;
 	}
@@ -257,15 +272,10 @@ public class Start extends JPanel {
 			sub3.setLayout(new BoxLayout(sub3, BoxLayout.PAGE_AXIS));
 			{
 				path_saveBrowse = new JButton("...");
-
 				sub3.add(path_saveBrowse);
-
 				path_backupBrowse = new JButton("...");
-
 				sub3.add(path_backupBrowse);
-
 				path_gameBrowse = new JButton("...");
-
 				sub3.add(path_gameBrowse);
 			}
 			pathes.add(sub3);
@@ -316,47 +326,9 @@ public class Start extends JPanel {
 		time_spinnerMinutes.setValue((int) ((time_split % 3600) / 60));
 		time_spinnerHours.setValue((int) (time_split / 3600));
 
-		path_saveField.getDocument().addDocumentListener(new DocumentListener() {
-			public void changedUpdate(DocumentEvent e) {
-				update();
-			}
-
-			public void removeUpdate(DocumentEvent e) {
-				update();
-			}
-
-			public void insertUpdate(DocumentEvent e) {
-				update();
-			}
-		});
-
-		path_backupField.getDocument().addDocumentListener(new DocumentListener() {
-			public void changedUpdate(DocumentEvent e) {
-				update();
-			}
-
-			public void removeUpdate(DocumentEvent e) {
-				update();
-			}
-
-			public void insertUpdate(DocumentEvent e) {
-				update();
-			}
-		});
-
-		path_gameField.getDocument().addDocumentListener(new DocumentListener() {
-			public void changedUpdate(DocumentEvent e) {
-				update();
-			}
-
-			public void removeUpdate(DocumentEvent e) {
-				update();
-			}
-
-			public void insertUpdate(DocumentEvent e) {
-				update();
-			}
-		});
+		path_saveField.getDocument().addDocumentListener(changeListener);
+		path_backupField.getDocument().addDocumentListener(changeListener);
+		path_gameField.getDocument().addDocumentListener(changeListener);
 
 		path_saveBrowse.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -370,7 +342,6 @@ public class Start extends JPanel {
 					if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
 						path_save = (chooser.getSelectedFile()).toString();
 						path_saveField.setText(path_save);
-					} else {
 					}
 
 				} catch (Exception j) {
@@ -390,7 +361,6 @@ public class Start extends JPanel {
 					if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
 						path_backup = (chooser.getSelectedFile()).toString();
 						path_backupField.setText(path_backup);
-					} else {
 					}
 				} catch (Exception j) {
 				}
@@ -409,7 +379,6 @@ public class Start extends JPanel {
 					if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
 						path_game = (chooser.getSelectedFile()).toString();
 						path_gameField.setText(path_game);
-					} else {
 					}
 				} catch (Exception j) {
 				}
