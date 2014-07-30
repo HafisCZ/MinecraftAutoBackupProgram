@@ -13,7 +13,7 @@ public class FTPService {
 		if (!ftp.isConnected()) throw new Exception("[FTPService] Connection to server '" + server + "' failed");
 	}
 
-	public FTPService(String server, int port) throws Exception {
+	public FTPService(String server, Integer port) throws Exception {
 		ftp.connect(server, port);
 		if (!ftp.isConnected()) throw new Exception("[FTPService] Connection to server '" + server + "' via port " + port + " failed");
 	}

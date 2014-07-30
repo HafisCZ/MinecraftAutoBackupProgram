@@ -10,6 +10,7 @@ import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.DateFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -18,6 +19,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFileChooser;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -50,6 +52,7 @@ public class Start extends JPanel {
 	private static final long serialVersionUID = 1L;
 
 	public static String filename;
+	public static float labelFont = 18.0f;
 
 	// WINDOW VARIABLES
 	public static JButton window_createBackup;
@@ -88,11 +91,21 @@ public class Start extends JPanel {
 	public static JTextField path_gameField;
 
 	// CLOUD VARIABLES
-	public static boolean cloud_enabled = true; // TODO MAKE FALSE
+	public static boolean cloud_enabled = true; // TODO MAKE FALSE xD
 	public static JButton cloud_upload;
 	public static JButton cloud_remove;
 	public static JButton cloud_download;
 	public static JButton cloud_refresh;
+	public static JButton cloud_save;
+	public static JCheckBox cloud_checkboxEnable;
+	public static JTextField cloud_serverField;
+	public static JFormattedTextField cloud_portField;
+	public static JTextField cloud_usernameField;
+	public static JTextField cloud_passwordField;
+	public static String cloud_server;
+	public static Integer cloud_port;
+	public static String cloud_username;
+	public static String cloud_password;
 
 	// LISTENERS
 	public static DocumentListener changeListener = new DocumentListener() {
@@ -125,6 +138,15 @@ public class Start extends JPanel {
 					time_split = Integer.parseInt(data[6].replace(";", ""));
 					if (time_split.equals(0)) time_split++;
 				}
+			}
+			if (new File("cloud.ini").isFile()) {
+				String datas = new String(Files.readAllBytes(Paths.get("cloud.ini")));
+				String[] data = datas.split("\n");
+				if (data.length >= 2) cloud_enabled = Integer.parseInt(data[1].toString().replace(";", "")) == 1 ? true : false;
+				if (data.length >= 3) cloud_server = data[2].toString().replace(";", "");
+				if (data.length >= 4) cloud_port = Integer.parseInt(data[3].toString().replace(";", ""));
+				if (data.length >= 5) cloud_username = data[4].toString().replace(";", "");
+				if (data.length >= 6) cloud_password = data[5].toString().replace(";", "");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -172,9 +194,9 @@ public class Start extends JPanel {
 						parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
 						zipFile.createZipFileFromFolder(path_save, parameters, false, 10485760);
 						updateTable(path_backup);
-					} catch (Exception j) {
-					} finally {
 						JOptionPane.showMessageDialog(null, "Backup file created :\n" + filename, "Backup completed", JOptionPane.PLAIN_MESSAGE);
+					} catch (Exception j) {
+						j.printStackTrace();
 					}
 				}
 			});
@@ -220,8 +242,90 @@ public class Start extends JPanel {
 
 	public JPanel setupP3() { // TODO PANE_CLOUD
 		JPanel pane = new JPanel();
-		JLabel l = new JLabel("Work in Progress");
-		pane.add(l);
+		pane.setLayout(new BoxLayout(pane, BoxLayout.PAGE_AXIS));
+		JLabel cloud_l0 = new JLabel("Currently supporting only FTP transfer, Google Drive access / others will be added in future.");
+		cloud_l0.setAlignmentX(CENTER_ALIGNMENT);
+		pane.add(cloud_l0);
+		JLabel cloud_l1 = new JLabel("I already wrote code for Google Drive, but there is actually unknown error which must be solved");
+		cloud_l1.setAlignmentX(CENTER_ALIGNMENT);
+		pane.add(cloud_l1);
+		JPanel fieldPanel = new JPanel(new FlowLayout());
+		fieldPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "FTP Settings"));
+		JPanel labelBox = new JPanel();
+		labelBox.setLayout(new BoxLayout(labelBox, BoxLayout.PAGE_AXIS));
+		fieldPanel.add(labelBox);
+		JPanel fieldBox = new JPanel();
+		fieldBox.setLayout(new BoxLayout(fieldBox, BoxLayout.PAGE_AXIS));
+		fieldPanel.add(fieldBox);
+		JLabel cloud0 = new JLabel("Server");
+		cloud0.setFont(getFont().deriveFont(labelFont));
+		labelBox.add(cloud0);
+		JLabel cloud1 = new JLabel("Port");
+		cloud1.setFont(getFont().deriveFont(labelFont));
+		labelBox.add(cloud1);
+		JLabel cloud2 = new JLabel("Username");
+		cloud2.setFont(getFont().deriveFont(labelFont));
+		labelBox.add(cloud2);
+		JLabel cloud3 = new JLabel("Password");
+		cloud3.setFont(getFont().deriveFont(labelFont));
+		labelBox.add(cloud3);
+		cloud_serverField = new JTextField();
+		cloud_serverField.setColumns(30);
+		cloud_serverField.setFont(getFont().deriveFont(14.0f));
+		cloud_serverField.setText(cloud_server);
+		fieldBox.add(cloud_serverField);
+		NumberFormat numbersOnly = NumberFormat.getNumberInstance();
+		numbersOnly.setGroupingUsed(false);
+		cloud_portField = new JFormattedTextField(numbersOnly);
+		cloud_portField.setColumns(30);
+		cloud_portField.setFont(getFont().deriveFont(14.0f));
+		cloud_portField.setText(cloud_port.toString());
+		fieldBox.add(cloud_portField);
+		cloud_usernameField = new JTextField();
+		cloud_usernameField.setColumns(30);
+		cloud_usernameField.setFont(getFont().deriveFont(14.0f));
+		cloud_usernameField.setText(cloud_username);
+		fieldBox.add(cloud_usernameField);
+		cloud_passwordField = new JTextField();
+		cloud_passwordField.setColumns(30);
+		cloud_passwordField.setFont(getFont().deriveFont(14.0f));
+		cloud_passwordField.setText(cloud_password);
+		fieldBox.add(cloud_passwordField);
+		pane.add(fieldPanel);
+		JPanel outBox = new JPanel();
+		outBox.setLayout(new FlowLayout());
+		pane.add(outBox);
+		cloud_checkboxEnable = new JCheckBox();
+		cloud_checkboxEnable.setText("Enabled");
+		cloud_checkboxEnable.setFont(getFont().deriveFont(17.0f));
+		cloud_checkboxEnable.setSelected(cloud_enabled);
+		cloud_checkboxEnable.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				update();
+			}
+		});
+		outBox.add(cloud_checkboxEnable);
+		cloud_save = new JButton("Save");
+		cloud_save.setFont(getFont().deriveFont(14.0f));
+		cloud_save.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				try {
+					update();
+					BufferedWriter w = new BufferedWriter(new FileWriter("cloud.ini"));
+					w.write("[cloud]\n");
+					w.write((cloud_enabled ? 1 : 0) + ";\n");
+					w.write(cloud_serverField.getText() + ";\n");
+					w.write(cloud_portField.getText() + ";\n");
+					w.write(cloud_usernameField.getText() + ";\n");
+					w.write(cloud_passwordField.getText() + ";");
+					w.close();
+				} catch (Exception j) {
+					j.printStackTrace();
+				}
+			}
+		});
+		outBox.add(cloud_save);
+
 		return pane;
 	}
 
@@ -237,13 +341,13 @@ public class Start extends JPanel {
 			sub1.setLayout(new BoxLayout(sub1, BoxLayout.PAGE_AXIS));
 			{
 				JLabel lb1 = new JLabel("Save Folder:");
-				lb1.setFont(getFont().deriveFont(17.0f));
+				lb1.setFont(getFont().deriveFont(labelFont));
 				sub1.add(lb1);
 				JLabel lb2 = new JLabel("Backup Folder:");
-				lb2.setFont(getFont().deriveFont(17.0f));
+				lb2.setFont(getFont().deriveFont(labelFont));
 				sub1.add(lb2);
 				JLabel lb3 = new JLabel("Game:");
-				lb3.setFont(getFont().deriveFont(17.0f));
+				lb3.setFont(getFont().deriveFont(labelFont));
 				sub1.add(lb3);
 			}
 			pathes.add(sub1);
@@ -291,7 +395,6 @@ public class Start extends JPanel {
 		sub4.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Auto-Backup"));
 		{
 			time_checkboxEnable = new JCheckBox();
-			time_checkboxEnable.setActionCommand("1");
 			time_checkboxEnable.setText("Enabled");
 			time_checkboxEnable.setFont(getFont().deriveFont(17.0f));
 			time_checkboxEnable.setSelected(time_enabled);
@@ -302,7 +405,7 @@ public class Start extends JPanel {
 			});
 			sub4.add(time_checkboxEnable);
 			JLabel l1 = new JLabel("Split: ");
-			l1.setFont(getFont().deriveFont(17.0f));
+			l1.setFont(getFont().deriveFont(labelFont));
 			sub4.add(l1);
 			sub4.add(new JLabel("Hours:"));
 			time_spinnerHours = new JSpinner(new SpinnerNumberModel(0, 0, 23, 1));
@@ -401,7 +504,6 @@ public class Start extends JPanel {
 					w.write("[timebackup]\n");
 					w.write((time_enabled == true ? 1 : 0) + ";\n");
 					w.write(time_split + ";");
-					// w.write(path_save + "|" + path_backup + "|" + path_game + "|" + time_enabled + "|" + time_split.toString());
 					w.close();
 				} catch (Exception j) {
 					j.printStackTrace();
@@ -531,9 +633,10 @@ public class Start extends JPanel {
 			cloud_upload.addActionListener(new ActionListener() {// TODO CLOUD
 						public void actionPerformed(ActionEvent e) {
 							try {
-								FTPService ftp = new FTPService("127.0.0.1");
-								ftp.authorize("USER", "USER");
-								ftp.upload("C:\\Program Files (x86)\\eclipse\\workspace\\MinecraftAutoSaver\\src\\document.txt", "");
+								String path = path_backup + "\\" + table.getModel().getValueAt(table.getSelectedRow(), 1);
+								FTPService ftp = new FTPService(cloud_server, cloud_port);
+								ftp.authorize(cloud_username, cloud_password);
+								ftp.upload(path, "");
 								ftp.close();
 							} catch (Exception f) {
 								f.printStackTrace();
@@ -553,10 +656,15 @@ public class Start extends JPanel {
 		time_split = (Integer) time_spinnerSeconds.getValue() + (Integer) time_spinnerMinutes.getValue() * 60
 				+ (Integer) time_spinnerHours.getValue() * 3600;
 		time_enabled = time_checkboxEnable.isSelected();
+		cloud_enabled = cloud_checkboxEnable.isSelected();
 		time_buttonStart.setEnabled(time_enabled);
 		time_spinnerHours.setEnabled(time_enabled);
 		time_spinnerMinutes.setEnabled(time_enabled);
 		time_spinnerSeconds.setEnabled(time_enabled);
+		cloud_download.setEnabled(cloud_enabled);
+		cloud_upload.setEnabled(cloud_enabled);
+		cloud_remove.setEnabled(cloud_enabled);
+		cloud_refresh.setEnabled(cloud_enabled);
 		updateTable(path_backup);
 	}
 
