@@ -38,6 +38,7 @@ import javax.swing.table.DefaultTableModel;
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.util.Zip4jConstants;
+import cloud.FTPService;
 
 public class Start extends JPanel {
 
@@ -87,7 +88,7 @@ public class Start extends JPanel {
 	public static JTextField path_gameField;
 
 	// CLOUD VARIABLES
-	public static boolean cloud_enabled = false;
+	public static boolean cloud_enabled = true; // TODO MAKE FALSE
 	public static JButton cloud_upload;
 	public static JButton cloud_remove;
 	public static JButton cloud_download;
@@ -115,13 +116,13 @@ public class Start extends JPanel {
 		try {
 			if (new File("data.nfo").isFile()) {
 				String datas = new String(Files.readAllBytes(Paths.get("data.nfo")));
-				String[] data = datas.split("\\|");
-				if (data.length >= 1) path_save = data[0].toString();
-				if (data.length >= 2) path_backup = data[1].toString();
-				if (data.length >= 3) path_game = data[2].toString();
-				if (data.length >= 5) {
-					time_enabled = Boolean.parseBoolean(data[3]);
-					time_split = Integer.parseInt(data[4]);
+				String[] data = datas.split("\n");
+				if (data.length >= 2) path_save = data[1].toString().replace(";", "");
+				if (data.length >= 3) path_backup = data[2].toString().replace(";", "");
+				if (data.length >= 4) path_game = data[3].toString().replace(";", "");
+				if (data.length >= 6) {
+					time_enabled = Integer.parseInt(data[5].replace(";", "")) == 1 ? true : false;
+					time_split = Integer.parseInt(data[6].replace(";", ""));
 					if (time_split.equals(0)) time_split++;
 				}
 			}
@@ -219,7 +220,7 @@ public class Start extends JPanel {
 
 	public JPanel setupP3() { // TODO PANE_CLOUD
 		JPanel pane = new JPanel();
-		JLabel l = new JLabel("Work in Progress - FTP side done, now workin' at UI and Google Drive access");
+		JLabel l = new JLabel("Work in Progress");
 		pane.add(l);
 		return pane;
 	}
@@ -393,7 +394,14 @@ public class Start extends JPanel {
 				try {
 					update();
 					BufferedWriter w = new BufferedWriter(new FileWriter("data.nfo"));
-					w.write(path_save + "|" + path_backup + "|" + path_game + "|" + time_enabled + "|" + time_split.toString());
+					w.write("[path]\n");
+					w.write(path_save + ";\n");
+					w.write(path_backup + ";\n");
+					w.write(path_game + ";\n");
+					w.write("[timebackup]\n");
+					w.write((time_enabled == true ? 1 : 0) + ";\n");
+					w.write(time_split + ";");
+					// w.write(path_save + "|" + path_backup + "|" + path_game + "|" + time_enabled + "|" + time_split.toString());
 					w.close();
 				} catch (Exception j) {
 					j.printStackTrace();
@@ -519,6 +527,19 @@ public class Start extends JPanel {
 					}
 				}
 			});
+			// Cloud
+			cloud_upload.addActionListener(new ActionListener() {// TODO CLOUD
+						public void actionPerformed(ActionEvent e) {
+							try {
+								FTPService ftp = new FTPService("127.0.0.1");
+								ftp.authorize("USER", "USER");
+								ftp.upload("C:\\Program Files (x86)\\eclipse\\workspace\\MinecraftAutoSaver\\src\\document.txt", "");
+								ftp.close();
+							} catch (Exception f) {
+								f.printStackTrace();
+							}
+						}
+					});
 		} catch (Exception j) {
 			j.printStackTrace();
 		}
