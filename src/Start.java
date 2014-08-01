@@ -1,3 +1,8 @@
+/**
+ * This work is licenced under Creative Commons Attribution-Noncommercial-No Derivative Works 4.0 International. 
+ * To view license terms, please visit http://creativecommons.org/licenses/by-nc-nd/4.0/.
+ */
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -102,10 +107,10 @@ public class Start extends JPanel {
 	public static JFormattedTextField cloud_portField;
 	public static JTextField cloud_usernameField;
 	public static JTextField cloud_passwordField;
-	public static String cloud_server;
-	public static Integer cloud_port;
-	public static String cloud_username;
-	public static String cloud_password;
+	public static String cloud_server = "";
+	public static Integer cloud_port = 21;
+	public static String cloud_username = "";
+	public static String cloud_password = "";
 
 	// LISTENERS
 	public static DocumentListener changeListener = new DocumentListener() {
@@ -621,7 +626,7 @@ public class Start extends JPanel {
 								JOptionPane.PLAIN_MESSAGE);
 						if (newName != "") {
 							File sel = new File(path);
-							sel.renameTo(new File(path_backup + "\\" + newName));
+							sel.renameTo(new File(path_backup + "\\" + newName + ".zip"));
 						}
 						updateTable(path_backup);
 					} catch (Exception j) {
