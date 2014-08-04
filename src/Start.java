@@ -8,7 +8,6 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -66,6 +65,7 @@ public class Start extends JPanel {
 	// TABLE VARIABLES
 	public static String[] table_columns = { "Sync", "Name", "Date", "Size" };
 	public static JTable table;
+	public static JTable table2;
 
 	// BACKUP MANAGER VARIABLES
 	public static JButton manager_loadOther;
@@ -96,7 +96,7 @@ public class Start extends JPanel {
 	public static JTextField path_gameField;
 
 	// CLOUD VARIABLES
-	public static boolean cloud_enabled = true; // TODO MAKE FALSE xD
+	public static boolean cloud_enabled = false; // TODO MAKE FALSE xD
 	public static JButton cloud_upload;
 	public static JButton cloud_remove;
 	public static JButton cloud_download;
@@ -227,12 +227,10 @@ public class Start extends JPanel {
 		this.add(subPanel);
 		// Creates a Tabbed pane
 		JTabbedPane mainWindow = new JTabbedPane();
-		mainWindow.addTab("Backup Manager", setupP1());
-		mainWindow.setMnemonicAt(0, KeyEvent.VK_NUMPAD1);
+		mainWindow.addTab("Local Backups", setupP1());
+		mainWindow.addTab("Cloud Backups", setupP1B());
 		mainWindow.addTab("Settings", setupP2());
-		mainWindow.setMnemonicAt(1, KeyEvent.VK_NUMPAD2);
 		mainWindow.addTab("Cloud Connection", setupP3());
-		mainWindow.setMnemonicAt(2, KeyEvent.VK_NUMPAD3);
 		update();
 		this.add(mainWindow);
 	}
@@ -243,6 +241,33 @@ public class Start extends JPanel {
 		dm.fireTableDataChanged();
 		table.setModel(new DefaultTableModel(getDatabase(backups), table_columns));
 		table.getColumnModel().getColumn(0).setPreferredWidth(1);
+	}
+
+	public static void updateTable2() {
+		DefaultTableModel dm = (DefaultTableModel) table2.getModel();
+		dm.getDataVector().removeAllElements();
+		dm.fireTableDataChanged();
+		table2.setModel(new DefaultTableModel(new Object[][] {}, table_columns));
+		table2.getColumnModel().getColumn(0).setPreferredWidth(1);
+	}
+
+	public JPanel setupP1B() { // TODO PANE_CLOUDLIST
+		JPanel pane = new JPanel();
+		try {
+			pane.setLayout(new BoxLayout(pane, BoxLayout.PAGE_AXIS));
+			JPanel listing = new JPanel();
+			pane.add(listing);
+			table2 = new JTable();
+			table2.setModel(new DefaultTableModel(new Object[][] {}, table_columns));
+			table2.setPreferredScrollableViewportSize(new Dimension(570, 150));
+			table2.setFillsViewportHeight(true);
+			table2.getColumnModel().getColumn(0).setPreferredWidth(1);
+			JScrollPane slr2 = new JScrollPane(table2, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+			listing.add(slr2);
+		} catch (Exception e) {
+
+		}
+		return pane;
 	}
 
 	public JPanel setupP3() { // TODO PANE_CLOUD
@@ -671,6 +696,7 @@ public class Start extends JPanel {
 		cloud_remove.setEnabled(cloud_enabled);
 		cloud_refresh.setEnabled(cloud_enabled);
 		updateTable(path_backup);
+		updateTable2();
 	}
 
 	public static void main(String[] args) {
@@ -682,8 +708,8 @@ public class Start extends JPanel {
 	}
 
 	public static Object[][] getDatabase(String location) {
+		if (!(new File(location).exists())) return new Object[][] { { "", "-", "", "" } };
 		DateFormat dateFormat = new SimpleDateFormat("dd MM yy HH:mm:ss");
-		if (!new File(location).exists()) return new Object[][] { { "", "-", "", "" } };
 		File[] files = getFileList(location);
 		String[] dates = new String[files.length];
 		long[] size = new long[files.length];
@@ -692,9 +718,9 @@ public class Start extends JPanel {
 			dates[i] = dateFormat.format(files[i].lastModified());
 			size[i] = files[i].length();
 		}
-		Object[][] mix = new Object[files.length][4];
+		Object[][] mix = new Object[names.length][4];
 		for (int i = 0; i < files.length; i++) {
-			mix[i][0] = "Local File";
+			mix[i][0] = i + 1;
 			mix[i][1] = names[i];
 			mix[i][2] = dates[i];
 			mix[i][3] = ((size[i] / 1024) < 1) ? size[i] + " B" : (((size[i] / 1048576) < 1) ? size[i] / 1024 + ","

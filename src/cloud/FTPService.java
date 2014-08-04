@@ -1,6 +1,7 @@
 package cloud;
 
 import it.sauronsoftware.ftp4j.FTPClient;
+import it.sauronsoftware.ftp4j.FTPFile;
 
 import java.io.File;
 
@@ -22,6 +23,10 @@ public class FTPService {
 		ftp.login(USERNAME, PASSWORD);
 		if (!ftp.isAuthenticated()) throw new Exception("[FTPService] Authentication failed");
 		return this;
+	}
+
+	public FTPFile[] getFiles(String server_directory) throws Exception{
+		return ftp.list(server_directory);
 	}
 
 	public void download(String local_fullpath, String server_fullpath) throws Exception {
