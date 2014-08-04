@@ -309,6 +309,22 @@ public class Start extends JPanel {
 					}
 				}
 			});
+			cloud_download.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent arg0) {
+					try {
+						if (isAnyCellSelected(table2)) {
+							String selected = new String(table2.getModel().getValueAt(table2.getSelectedRow(), 1).toString());
+							FTPService ftp = new FTPService(cloud_server, cloud_port);
+							ftp.authorize(cloud_username, cloud_password);
+							ftp.download(path_backup + "\\" + selected, selected);
+							ftp.close();
+							update();
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			});
 			updateTable2();
 		} catch (Exception e) {
 
