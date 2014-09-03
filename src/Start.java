@@ -721,11 +721,14 @@ public class Start extends JPanel {
 						if (isAnyCellSelected(table)) {
 							Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
 							String path = path_backup + "\\" + selected;
-							String newName = JOptionPane.showInputDialog(null, "Enter new name for file: ", "Rename file: " + selected,
-									JOptionPane.PLAIN_MESSAGE);
-							if (newName != "") {
+							String newName = (String) JOptionPane.showInputDialog(null, "Enter new name for file: ", "Rename file: " + selected,
+									JOptionPane.PLAIN_MESSAGE, null, null, selected.toString().replace(".zip", ""));
+							if ((newName != null) && (newName.length() > 0)) {
 								File sel = new File(path);
 								sel.renameTo(new File(path_backup + "\\" + newName + ".zip"));
+								logArea.append("\n[MBU] File " + selected + " was renamed to " + newName + ".zip");
+							} else {
+								logArea.append("\n[MBU] File " + selected + " failed to be renamed ");
 							}
 							updateTable(path_backup);
 						}
@@ -739,12 +742,19 @@ public class Start extends JPanel {
 						public void actionPerformed(ActionEvent e) {
 							try {
 								if (isAnyCellSelected(table)) {
-									String path = path_backup + "\\" + table.getModel().getValueAt(table.getSelectedRow(), 1);
+									Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
+									String path = path_backup + "\\" + selected;
 									FTPService ftp = new FTPService(cloud_server, cloud_port);
+									logArea.append("\n[FTPService] Connected to " + cloud_server + "@" + cloud_port);
 									ftp.authorize(cloud_username, cloud_password);
+									logArea.append("\n[FTPService] User " + cloud_username + " authorized");
+									logArea.append("\n[FTPService] Uploading file: " + selected);
+									logArea.append("\n[FTPService] Bytes uploaded: " + new File(path).length());
 									ftp.upload(path, "");
 									ftp.close();
+									logArea.append("\n[FTPService] Connection was closed");
 									showInfo("Cloud Service", "File uploaded succesfully !");
+
 								}
 							} catch (Exception f) {
 								f.printStackTrace();
