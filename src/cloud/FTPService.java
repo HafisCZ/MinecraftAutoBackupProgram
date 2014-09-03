@@ -25,7 +25,7 @@ public class FTPService {
 		return this;
 	}
 
-	public FTPFile[] getFiles(String server_directory) throws Exception{
+	public FTPFile[] getFiles(String server_directory) throws Exception {
 		return ftp.list(server_directory);
 	}
 

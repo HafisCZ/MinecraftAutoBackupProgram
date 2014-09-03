@@ -34,6 +34,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
@@ -51,8 +52,7 @@ import cloud.FTPService;
 public class Start extends JPanel {
 
 	/**
-	 * Warning: I don't care about any errors caused to your backed saves using modified version of this program. Every version I release is stable
-	 * and I am using everytime the latest version.
+	 * More Info at http://hafiscz.github.io/
 	 */
 
 	private static final long serialVersionUID = 1L;
@@ -61,11 +61,12 @@ public class Start extends JPanel {
 	public static float labelFont = 18.0f;
 
 	// WINDOW VARIABLES
+	public static JTextArea logArea;
 	public static JButton window_createBackup;
 	public static JButton window_playGame;
 
 	// TABLE VARIABLES
-	public static String[] table_columns = { "Sync", "Name", "Date", "Size" };
+	public static String[] table_columns = { "#", "Name", "Date", "Size" };
 	public static JTable table;
 	public static JTable table2;
 
@@ -233,8 +234,13 @@ public class Start extends JPanel {
 		mainWindow.addTab("Cloud Backups", setupP1B());
 		mainWindow.addTab("Settings", setupP2());
 		mainWindow.addTab("Cloud Connection", setupP3());
+		mainWindow.addTab("Log Page", setupLog());
 		update();
 		this.add(mainWindow);
+	}
+
+	public static void showInfo(String name, String message) {
+		JOptionPane.showMessageDialog(null, message, name, JOptionPane.PLAIN_MESSAGE);
 	}
 
 	public static void updateTable(String backups) {
@@ -257,6 +263,17 @@ public class Start extends JPanel {
 			ftp.close();
 		} catch (Exception e) {
 		}
+	}
+
+	public JPanel setupLog() { // TODO LOG LIST - RECEIVE ALL OPERATION STATUSES & DATA CHANGES & UPDATES
+		JPanel pane = new JPanel();
+		logArea = new JTextArea(15, 53);
+		logArea.setFont(getFont().deriveFont(13.0f));
+		JScrollPane scrollPane = new JScrollPane(logArea);
+		logArea.setEditable(false);
+		pane.add(scrollPane);
+		logArea.append("[MBU] Minecraft Backup Utility | CC-NY-NC-ND by mar21");
+		return pane;
 	}
 
 	public JPanel setupP1B() { // TODO PANE_CLOUDLIST
@@ -303,6 +320,7 @@ public class Start extends JPanel {
 							ftp.removeFile(selected);
 							ftp.close();
 							updateTable2();
+							showInfo("Cloud Service", "File removed succesfully !");
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -319,6 +337,7 @@ public class Start extends JPanel {
 							ftp.download(path_backup + "\\" + selected, selected);
 							ftp.close();
 							update();
+							showInfo("Cloud Service", "File downloaded succesfully !");
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -725,6 +744,7 @@ public class Start extends JPanel {
 									ftp.authorize(cloud_username, cloud_password);
 									ftp.upload(path, "");
 									ftp.close();
+									showInfo("Cloud Service", "File uploaded succesfully !");
 								}
 							} catch (Exception f) {
 								f.printStackTrace();
@@ -824,6 +844,7 @@ public class Start extends JPanel {
 		Frame.setContentPane(Content);
 		Frame.pack();
 		Frame.setVisible(true);
+		logArea.append("\n[MBU] Size [" + Frame.getWidth() + ";" + Frame.getHeight() + "]");
 	}
 
 	public static boolean delete(File file) {
