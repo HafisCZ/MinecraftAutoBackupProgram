@@ -147,24 +147,35 @@ public class Start extends JPanel {
 			if (new File("data.nfo").isFile()) {
 				String datas = new String(Files.readAllBytes(Paths.get("data.nfo")));
 				String[] data = datas.split("\n");
-				if (data.length >= 2) path_save = data[1].toString().replace(";", "");
-				if (data.length >= 3) path_backup = data[2].toString().replace(";", "");
-				if (data.length >= 4) path_game = data[3].toString().replace(";", "");
+				if (data.length >= 2)
+					path_save = data[1].toString().replace(";", "");
+				if (data.length >= 3)
+					path_backup = data[2].toString().replace(";", "");
+				if (data.length >= 4)
+					path_game = data[3].toString().replace(";", "");
 				if (data.length >= 6) {
-					time_enabled = Integer.parseInt(data[5].replace(";", "")) == 1 ? true : false;
+					time_enabled = Integer.parseInt(data[5].replace(";", "")) == 1 ? true
+							: false;
 					time_split = Integer.parseInt(data[6].replace(";", ""));
-					if (time_split.equals(0)) time_split++;
+					if (time_split.equals(0))
+						time_split++;
 				}
 				path_info = data.length;
 			}
 			if (new File("cloud.ini").isFile()) {
 				String datas = new String(Files.readAllBytes(Paths.get("cloud.ini")));
 				String[] data = datas.split("\n");
-				if (data.length >= 2) cloud_enabled = Integer.parseInt(data[1].toString().replace(";", "")) == 1 ? true : false;
-				if (data.length >= 3) cloud_server = data[2].toString().replace(";", "");
-				if (data.length >= 4) cloud_port = Integer.parseInt(data[3].toString().replace(";", ""));
-				if (data.length >= 5) cloud_username = data[4].toString().replace(";", "");
-				if (data.length >= 6) cloud_password = data[5].toString().replace(";", "");
+				if (data.length >= 2)
+					cloud_enabled = Integer.parseInt(data[1].toString().replace(";", "")) == 1 ? true
+							: false;
+				if (data.length >= 3)
+					cloud_server = data[2].toString().replace(";", "");
+				if (data.length >= 4)
+					cloud_port = Integer.parseInt(data[3].toString().replace(";", ""));
+				if (data.length >= 5)
+					cloud_username = data[4].toString().replace(";", "");
+				if (data.length >= 6)
+					cloud_password = data[5].toString().replace(";", "");
 				cloud_info = data.length;
 			}
 		} catch (Exception e) {
@@ -199,13 +210,19 @@ public class Start extends JPanel {
 					try {
 						Calendar cal = Calendar.getInstance();
 						DateFormat dateFormat = new SimpleDateFormat("yy_MM_dd");
-						filename = path_backup + "\\backup" + "_" + dateFormat.format(cal.getTime()) + ".zip";
-						if (new File(path_backup + "\\backup" + "_" + dateFormat.format(cal.getTime()) + ".zip").isFile()) {
+						filename = path_backup + "\\backup" + "_"
+								+ dateFormat.format(cal.getTime()) + ".zip";
+						if (new File(path_backup + "\\backup" + "_"
+								+ dateFormat.format(cal.getTime()) + ".zip").isFile()) {
 							for (int i = 1;; i++) {
-								if (new File(path_backup + "\\backup" + "_" + dateFormat.format(cal.getTime()) + "_" + i + ".zip").isFile()) {
+								if (new File(path_backup + "\\backup" + "_"
+										+ dateFormat.format(cal.getTime())
+										+ "_" + i + ".zip").isFile()) {
 									continue;
 								}
-								filename = path_backup + "\\backup" + "_" + dateFormat.format(cal.getTime()) + "_" + i + ".zip";
+								filename = path_backup + "\\backup" + "_"
+										+ dateFormat.format(cal.getTime())
+										+ "_" + i + ".zip";
 								break;
 							}
 						}
@@ -215,7 +232,8 @@ public class Start extends JPanel {
 						parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
 						zipFile.createZipFileFromFolder(path_save, parameters, false, 10485760);
 						updateTable(path_backup);
-						JOptionPane.showMessageDialog(null, "Backup file created :\n" + filename, "Backup completed", JOptionPane.PLAIN_MESSAGE);
+						JOptionPane.showMessageDialog(null, "Backup file created :\n"
+								+ filename, "Backup completed", JOptionPane.PLAIN_MESSAGE);
 					} catch (Exception j) {
 						j.printStackTrace();
 					}
@@ -747,12 +765,21 @@ public class Start extends JPanel {
 						if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
 							String path = chooser.getSelectedFile().getCanonicalPath();
 							if (JOptionPane.showConfirmDialog(null, "Do you really want to retrieve files from backup ?"
-									+ "\nThis will remove all current files in specified path" + "\nand place there all files from :\n" + path,
-									"Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
+									+ "\nThis will remove all current files in specified path"
+									+ "\nand place there all files from :\n"
+									+ path, "Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
 								delete(new File(path_save));
+								tText("\n[Backup] Save at ", Color.BLACK);
+								tText(path_save, Color.ORANGE);
+								tText(" was removed", Color.BLACK);
 								ZipFile zipFile = new ZipFile(path);
+								tText("\n[Backup] Extracting files ...", Color.BLACK);
 								zipFile.extractAll(path_save.substring(0, path_save.lastIndexOf("\\")));
-								JOptionPane.showMessageDialog(null, "Backup file loaded :\n" + path, "Load completed", JOptionPane.PLAIN_MESSAGE);
+								JOptionPane.showMessageDialog(null, "Backup file loaded :\n"
+										+ path, "Load completed", JOptionPane.PLAIN_MESSAGE);
+								tText("\n[Backup] Backup file ", Color.BLACK);
+								tText(chooser.getSelectedFile().getName(), Color.ORANGE);
+								tText(" was loaded", Color.BLACK);
 							}
 						}
 					} catch (Exception f) {
@@ -786,12 +813,21 @@ public class Start extends JPanel {
 							Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
 							String path = path_backup + "\\" + selected;
 							if (JOptionPane.showConfirmDialog(null, "Do you really want to retrieve files from backup ?"
-									+ "\nThis will remove all current files in specified path" + "\nand place there all files from :\n" + path,
-									"Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
+									+ "\nThis will remove all current files in specified path"
+									+ "\nand place there all files from :\n"
+									+ path, "Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
 								delete(new File(path_save));
+								tText("\n[Backup] Save at ", Color.BLACK);
+								tText(path_save, Color.ORANGE);
+								tText(" was removed", Color.BLACK);
 								ZipFile zipFile = new ZipFile(path);
+								tText("\n[Backup] Extracting files ...", Color.BLACK);
 								zipFile.extractAll(path_save.substring(0, path_save.lastIndexOf("\\")));
-								JOptionPane.showMessageDialog(null, "Backup file loaded :\n" + path, "Load completed", JOptionPane.PLAIN_MESSAGE);
+								JOptionPane.showMessageDialog(null, "Backup file loaded :\n"
+										+ path, "Load completed", JOptionPane.PLAIN_MESSAGE);
+								tText("\n[Backup] Backup file ", Color.BLACK);
+								tText(selected.toString(), Color.ORANGE);
+								tText(" was loaded", Color.BLACK);
 							}
 						}
 					} catch (Exception j) {
@@ -806,11 +842,12 @@ public class Start extends JPanel {
 						if (isAnyCellSelected(table)) {
 							Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
 							String path = path_backup + "\\" + selected;
-							String newName = (String) JOptionPane.showInputDialog(null, "Enter new name for file: ", "Rename file: " + selected,
-									JOptionPane.PLAIN_MESSAGE, null, null, selected.toString().replace(".zip", ""));
+							String newName = (String) JOptionPane.showInputDialog(null, "Enter new name for file: ", "Rename file: "
+									+ selected, JOptionPane.PLAIN_MESSAGE, null, null, selected.toString().replace(".zip", ""));
 							if ((newName != null) && (newName.length() > 0)) {
 								File sel = new File(path);
-								sel.renameTo(new File(path_backup + "\\" + newName + ".zip"));
+								sel.renameTo(new File(path_backup + "\\"
+										+ newName + ".zip"));
 								tText("\n[File] File ", Color.BLACK);
 								tText(selected.toString(), Color.ORANGE);
 								tText(" was renamed to ", Color.BLACK);
@@ -829,31 +866,31 @@ public class Start extends JPanel {
 			});
 			// Cloud
 			cloud_upload.addActionListener(new ActionListener() {// TODO CLOUD
-						public void actionPerformed(ActionEvent e) {
-							try {
-								if (isAnyCellSelected(table)) {
-									Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
-									String path = path_backup + "\\" + selected;
-									FTPService ftp = new FTPService(cloud_server, cloud_port);
-									tText("\n[FTP Service] Connected to ", Color.BLACK);
-									tText(cloud_server, Color.BLUE);
-									tText(" @ ", Color.BLACK);
-									tText(cloud_port.toString(), Color.BLUE);
-									ftp.authorize(cloud_username, cloud_password).def();
-									tText("\n[FTP Service] Authorized as ", Color.BLACK);
-									tText(cloud_username, Color.BLUE);
-									ftp.upload(path, "");
-									tText("\n[FTP Service] File ", Color.BLACK);
-									tText(selected.toString(), Color.ORANGE);
-									tText(" uploaded", Color.BLACK);
-									ftp.close();
-									tText("\n[FTP Service] Connection closed", Color.BLACK);
-								}
-							} catch (Exception f) {
-								f.printStackTrace();
-							}
+				public void actionPerformed(ActionEvent e) {
+					try {
+						if (isAnyCellSelected(table)) {
+							Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
+							String path = path_backup + "\\" + selected;
+							FTPService ftp = new FTPService(cloud_server, cloud_port);
+							tText("\n[FTP Service] Connected to ", Color.BLACK);
+							tText(cloud_server, Color.BLUE);
+							tText(" @ ", Color.BLACK);
+							tText(cloud_port.toString(), Color.BLUE);
+							ftp.authorize(cloud_username, cloud_password).def();
+							tText("\n[FTP Service] Authorized as ", Color.BLACK);
+							tText(cloud_username, Color.BLUE);
+							ftp.upload(path, "");
+							tText("\n[FTP Service] File ", Color.BLACK);
+							tText(selected.toString(), Color.ORANGE);
+							tText(" uploaded", Color.BLACK);
+							ftp.close();
+							tText("\n[FTP Service] Connection closed", Color.BLACK);
 						}
-					});
+					} catch (Exception f) {
+						f.printStackTrace();
+					}
+				}
+			});
 		} catch (Exception j) {
 			j.printStackTrace();
 		}
@@ -864,7 +901,8 @@ public class Start extends JPanel {
 		path_save = path_saveField.getText();
 		path_backup = path_backupField.getText();
 		path_game = path_gameField.getText();
-		time_split = (Integer) time_spinnerSeconds.getValue() + (Integer) time_spinnerMinutes.getValue() * 60
+		time_split = (Integer) time_spinnerSeconds.getValue()
+				+ (Integer) time_spinnerMinutes.getValue() * 60
 				+ (Integer) time_spinnerHours.getValue() * 3600;
 		time_enabled = time_checkboxEnable.isSelected();
 		cloud_enabled = cloud_checkboxEnable.isSelected();
@@ -888,7 +926,8 @@ public class Start extends JPanel {
 	}
 
 	public static Object[][] getDatabase(String location) {
-		if (!(new File(location).exists())) return new Object[][] {};
+		if (!(new File(location).exists()))
+			return new Object[][] {};
 		DateFormat dateFormat = new SimpleDateFormat("dd MM yy HH:mm:ss");
 		File[] files = getFileList(location);
 		String[] dates = new String[files.length];
@@ -903,9 +942,12 @@ public class Start extends JPanel {
 			mix[i][0] = i + 1;
 			mix[i][1] = names[i];
 			mix[i][2] = dates[i];
-			mix[i][3] = ((size[i] / 1024) < 1) ? size[i] + " B" : (((size[i] / 1048576) < 1) ? size[i] / 1024 + ","
-					+ (int) Math.ceil(((size[i] % 1024) * 1000) / 1000) + " kB" : size[i] / 1048576 + ","
-					+ (int) Math.ceil(((size[i] / 1024) * 1000) / 1000) + " MB");
+			mix[i][3] = ((size[i] / 1024) < 1) ? size[i] + " B"
+					: (((size[i] / 1048576) < 1) ? size[i] / 1024 + ","
+							+ (int) Math.ceil(((size[i] % 1024) * 1000) / 1000)
+							+ " kB" : size[i] / 1048576 + ","
+							+ (int) Math.ceil(((size[i] / 1024) * 1000) / 1000)
+							+ " MB");
 		}
 		return mix;
 	}
@@ -926,9 +968,12 @@ public class Start extends JPanel {
 			mix[i][0] = i + 1;
 			mix[i][1] = names[i];
 			mix[i][2] = dates[i];
-			mix[i][3] = ((size[i] / 1024) < 1) ? size[i] + " B" : (((size[i] / 1048576) < 1) ? size[i] / 1024 + ","
-					+ (int) Math.ceil(((size[i] % 1024) * 1000) / 1000) + " kB" : size[i] / 1048576 + ","
-					+ (int) Math.ceil(((size[i] / 1024) * 1000) / 1000) + " MB");
+			mix[i][3] = ((size[i] / 1024) < 1) ? size[i] + " B"
+					: (((size[i] / 1048576) < 1) ? size[i] / 1024 + ","
+							+ (int) Math.ceil(((size[i] % 1024) * 1000) / 1000)
+							+ " kB" : size[i] / 1048576 + ","
+							+ (int) Math.ceil(((size[i] / 1024) * 1000) / 1000)
+							+ " MB");
 		}
 		return mix;
 	}
@@ -951,13 +996,17 @@ public class Start extends JPanel {
 
 	public static boolean delete(File file) {
 		File[] list;
-		if (file.equals(null)) return false;
-		if (file.isFile()) return file.delete();
-		if (!file.isDirectory()) return false;
+		if (file.equals(null))
+			return false;
+		if (file.isFile())
+			return file.delete();
+		if (!file.isDirectory())
+			return false;
 		list = file.listFiles();
 		if (list != null && list.length > 0) {
 			for (File f : list)
-				if (!delete(f)) return false;
+				if (!delete(f))
+					return false;
 		}
 		return file.delete();
 	}
@@ -968,14 +1017,16 @@ public class Start extends JPanel {
 
 	public static File[] getFileList(String path) {
 		File folder = new File(path);
-		if (folder.isDirectory()) return folder.listFiles();
+		if (folder.isDirectory())
+			return folder.listFiles();
 		return null;
 	}
 
 	public static boolean isAnyCellSelected(JTable table) {
 		for (int i = 0; i < table.getModel().getRowCount(); i++) {
 			for (int y = 0; y < table.getModel().getColumnCount(); y++) {
-				if (table.isCellSelected(i, y)) return true;
+				if (table.isCellSelected(i, y))
+					return true;
 			}
 		}
 		return false;
