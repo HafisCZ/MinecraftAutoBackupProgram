@@ -1,5 +1,6 @@
 /**
- * This work is licenced under Creative Commons Attribution-Noncommercial-No Derivative Works 4.0 International. 
+ * Created by HafisCZ aka MAR21. http://hafiscz.github.io/
+ * This work is licenced under Creative Commons.
  * To view license terms, please visit http://creativecommons.org/licenses/by-nc-nd/4.0/.
  */
 
@@ -984,7 +985,7 @@ public class Start extends JPanel {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		JFrame Frame = new JFrame("Minecraft Backup Utility | CC-NY-NC-ND by mar21");
+		JFrame Frame = new JFrame("Minecraft Backup Utility | CC-BY-NC-ND by mar21");
 		Frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		Frame.setResizable(false);
 		Start Content = new Start();
