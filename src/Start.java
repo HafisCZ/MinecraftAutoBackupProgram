@@ -233,6 +233,9 @@ public class Start extends JPanel {
 						parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
 						zipFile.createZipFileFromFolder(path_save, parameters, false, 10485760);
 						updateTable(path_backup);
+						tText("\n[File] Backup ", Color.BLACK);
+						tText(filename.toString(), Color.ORANGE);
+						tText(" was created", Color.BLACK);
 						JOptionPane.showMessageDialog(null, "Backup file created :\n"
 								+ filename, "Backup completed", JOptionPane.PLAIN_MESSAGE);
 					} catch (Exception j) {
