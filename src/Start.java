@@ -19,6 +19,7 @@ import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 import javax.swing.BorderFactory;
@@ -86,6 +87,7 @@ public class Start extends JPanel {
 	public static JButton manager_use;
 	public static JButton manager_remove;
 	public static JButton manager_rename;
+	public static JButton manager_addDescription;
 
 	// TIMEBACKUP VARIABLES
 	public static boolean time_enabled = false;
@@ -152,8 +154,8 @@ public class Start extends JPanel {
 		int path_info = 0;
 		// Load saved settings
 		try {
-			if (new File("data.nfo").isFile()) {
-				String datas = new String(Files.readAllBytes(Paths.get("data.nfo")));
+			if (new File("data.ini").isFile()) {
+				String datas = new String(Files.readAllBytes(Paths.get("data.ini")));
 				String[] data = datas.split("\n");
 				if (data.length >= 2) date_formatChoosen = Integer.parseInt(data[1].toString());
 				if (data.length >= 4) path_save = data[3].toString();
@@ -169,11 +171,11 @@ public class Start extends JPanel {
 			if (new File("cloud.ini").isFile()) {
 				String datas = new String(Files.readAllBytes(Paths.get("cloud.ini")));
 				String[] data = datas.split("\n");
-				if (data.length >= 2) cloud_enabled = Integer.parseInt(data[1].toString().replace(";", "")) == 1 ? true : false;
-				if (data.length >= 3) cloud_server = data[2].toString().replace(";", "");
-				if (data.length >= 4) cloud_port = Integer.parseInt(data[3].toString().replace(";", ""));
-				if (data.length >= 5) cloud_username = data[4].toString().replace(";", "");
-				if (data.length >= 6) cloud_password = data[5].toString().replace(";", "");
+				if (data.length >= 2) cloud_enabled = Integer.parseInt(data[1].toString()) == 1 ? true : false;
+				if (data.length >= 3) cloud_server = data[2].toString();
+				if (data.length >= 4) cloud_port = Integer.parseInt(data[3].toString());
+				if (data.length >= 5) cloud_username = data[4].toString();
+				if (data.length >= 6) cloud_password = data[5].toString();
 				cloud_info = data.length;
 			}
 		} catch (Exception e) {
@@ -513,11 +515,11 @@ public class Start extends JPanel {
 					update();
 					BufferedWriter w = new BufferedWriter(new FileWriter("cloud.ini"));
 					w.write("[cloud]\n");
-					w.write((cloud_enabled ? 1 : 0) + ";\n");
-					w.write(cloud_serverField.getText() + ";\n");
-					w.write(cloud_portField.getText() + ";\n");
-					w.write(cloud_usernameField.getText() + ";\n");
-					w.write(cloud_passwordField.getText() + ";");
+					w.write((cloud_enabled ? 1 : 0) + "\n");
+					w.write(cloud_serverField.getText() + "\n");
+					w.write(cloud_portField.getText() + "\n");
+					w.write(cloud_usernameField.getText() + "\n");
+					w.write(cloud_passwordField.getText());
 					w.close();
 					tText("\n[Data Load] Cloud settings saved", Color.BLACK);
 				} catch (Exception j) {
@@ -715,7 +717,7 @@ public class Start extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				try {
 					update();
-					BufferedWriter w = new BufferedWriter(new FileWriter("data.nfo"));
+					BufferedWriter w = new BufferedWriter(new FileWriter("data.ini"));
 					w.write("[dateformat]\n");
 					w.write(date_formatChoosen + "\n");
 					w.write("[path]\n");
@@ -761,6 +763,8 @@ public class Start extends JPanel {
 			buttons.add(manager_rename);
 			manager_remove = new JButton("Remove");
 			buttons.add(manager_remove);
+			manager_addDescription = new JButton("Description");
+			buttons.add(manager_addDescription);
 			JPanel buttons2 = new JPanel(new FlowLayout(FlowLayout.CENTER));
 			buttons2.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Cloud"));
 			pane.add(buttons2);
@@ -873,6 +877,58 @@ public class Start extends JPanel {
 					}
 				}
 			});
+			// Adds description file
+			manager_addDescription.addActionListener(new ActionListener() {// TODO CLOUD
+						public void actionPerformed(ActionEvent e) {
+							try {
+								if (isAnyCellSelected(table)) {
+									Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
+									String path = path_backup + "\\" + selected;
+									String description_text = null;
+									if (new File(new File(path)
+											.getCanonicalPath()
+											.toString()
+											.replace(new File(path).getName(),
+													new File(path).getName().substring(0, new File(path).getName().length() - 3) + "decr")).exists())
+										description_text = new String(Files.readAllBytes(Paths.get(new File(new File(path)
+												.getCanonicalPath()
+												.toString()
+												.replace(new File(path).getName(),
+														new File(path).getName().substring(0, new File(path).getName().length() - 3) + "decr"))
+												.getCanonicalPath())));
+									description_text = (String) JOptionPane.showInputDialog(null,
+											"Enter a description: \n-Leave blank to remove description", "File description for " + selected,
+											JOptionPane.PLAIN_MESSAGE, null, null, description_text);
+									if (description_text != (null) && description_text.length() > 0) {
+										BufferedWriter w = new BufferedWriter(new FileWriter(new File(new File(path)
+												.getCanonicalPath()
+												.toString()
+												.replace(new File(path).getName(),
+														new File(path).getName().substring(0, new File(path).getName().length() - 3) + "decr"))
+												.getCanonicalPath()));
+										w.write(description_text);
+										w.close();
+									} else {
+										if (new File(new File(path)
+												.getCanonicalPath()
+												.toString()
+												.replace(new File(path).getName(),
+														new File(path).getName().substring(0, new File(path).getName().length() - 3) + "decr"))
+												.exists())
+											new File(new File(path)
+													.getCanonicalPath()
+													.toString()
+													.replace(new File(path).getName(),
+															new File(path).getName().substring(0, new File(path).getName().length() - 3) + "decr"))
+													.delete();
+									}
+									update();
+								}
+							} catch (Exception f) {
+								f.printStackTrace();
+							}
+						}
+					});
 			// Cloud
 			cloud_upload.addActionListener(new ActionListener() {// TODO CLOUD
 						public void actionPerformed(ActionEvent e) {
@@ -933,18 +989,19 @@ public class Start extends JPanel {
 		});
 	}
 
-	public static Object[][] getDatabase(String location) {
+	public static Object[][] getDatabase(String location) { // TODO
 		if (!(new File(location).exists())) return new Object[][] {};
 		DateFormat dateFormat = new SimpleDateFormat(date_formats[date_formatChoosen]);
-		File[] files = getFileList(location);
+		File[] files = getFileList(location, ".decr");
 		String[] dates = new String[files.length];
 		long[] size = new long[files.length];
-		String[] names = getFileNameList(location);
+		String[] names = new String[files.length];
 		for (int i = 0; i < files.length; i++) {
+			names[i] = files[i].getName();
 			dates[i] = dateFormat.format(files[i].lastModified());
 			size[i] = files[i].length();
 		}
-		Object[][] mix = new Object[names.length][4];
+		Object[][] mix = new Object[files.length][5];
 		for (int i = 0; i < files.length; i++) {
 			mix[i][0] = i + 1;
 			mix[i][1] = names[i];
@@ -952,6 +1009,17 @@ public class Start extends JPanel {
 			mix[i][3] = ((size[i] / 1024) < 1) ? size[i] + " B" : (((size[i] / 1048576) < 1) ? size[i] / 1024 + ","
 					+ (int) Math.ceil(((size[i] % 1024) * 1000) / 1000) + " kB" : size[i] / 1048576 + ","
 					+ (int) Math.ceil(((size[i] / 1024) * 1000) / 1000) + " MB");
+			try {
+				String pr_fileName = files[i].getName();
+				File pr_file = new File(files[i].getCanonicalPath().toString()
+						.replace(pr_fileName, pr_fileName.substring(0, pr_fileName.length() - 3) + "decr"));
+				if (pr_file.exists()) {
+					mix[i][4] = new String(Files.readAllBytes(Paths.get(pr_file.getCanonicalPath())));
+				} else {
+					// tText("\n[File Service] Description for " + files[i].getName() + " not found !", Color.RED);
+				}
+			} catch (Exception e) {
+			}
 		}
 		return mix;
 	}
@@ -1012,9 +1080,17 @@ public class Start extends JPanel {
 		return new File(path).isDirectory() ? new File(path).list() : null;
 	}
 
-	public static File[] getFileList(String path) {
+	public static File[] getFileList(String path, String notReturn) {
 		File folder = new File(path);
-		if (folder.isDirectory()) return folder.listFiles();
+		if (folder.isDirectory()) {
+			File[] temp = folder.listFiles();
+			ArrayList<File> validFiles = new ArrayList<File>();
+			for (File f : temp)
+				if (f.getName().contains(".zip")) validFiles.add(f);
+			File[] returnArray = new File[validFiles.size()];
+			returnArray = validFiles.toArray(returnArray);
+			return returnArray;
+		}
 		return null;
 	}
 
