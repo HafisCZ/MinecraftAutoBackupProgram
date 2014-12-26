@@ -44,7 +44,7 @@ public class TimebackupService {
 
 			}
 			backupTimer.cancel();
-			if (Start.time_running) new TimebackupService(Start.time_split);
+			if (Start.timedBackup_running) new TimebackupService(Start.timedBackup_split);
 		}
 	}
 }
