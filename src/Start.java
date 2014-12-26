@@ -68,21 +68,23 @@ public class Start extends JPanel {
 	public static String filename;
 	public static float labelFont = 18.0f;
 
-	// WINDOW VARIABLES
-	public static DefaultStyledDocument logAreaDoc;
-	public static JTextPane logArea;
-	public static JButton log_clean;
+	// Upper Bar
 	public static JButton window_createBackup;
 	public static JButton window_playGame;
 
-	// TABLE VARIABLES
+	// Log Area
+	public static DefaultStyledDocument logAreaDoc;
+	public static JTextPane logArea;
+	public static JButton log_clean;
+
+	// Tables
+	public static JTable table;
+	public static JTable table2;
 	public static String[] table_columns = { "#", "Name", "Date", "Size", "Description" };
 	public static String[] date_formats = { "dd/MM/yy HH:mm:ss", "dd-MM-yy HH:mm:ss", "dd.MM.yy HH:mm:ss", "MM/dd/yy HH:mm:ss", "MM-dd-yy HH:mm:ss",
 			"MM.dd.yy HH:mm:ss" };
-	public static JTable table;
-	public static JTable table2;
 
-	// BACKUP MANAGER VARIABLES
+	// Local
 	public static JButton manager_loadOther;
 	public static JButton manager_loadSelected;
 	public static JButton manager_remove;
@@ -90,7 +92,7 @@ public class Start extends JPanel {
 	public static JButton manager_description;
 	public static boolean manager_isSelected = false;
 
-	// TIMEBACKUP VARIABLES
+	// Timed Backup
 	public static boolean timedBackup_enabled = false;
 	public static boolean timedBackup_running = false;
 	public static Integer timedBackup_split = 1;
@@ -100,7 +102,7 @@ public class Start extends JPanel {
 	public static JSpinner time_spinnerHours;
 	public static JButton time_buttonStart;
 
-	// PATH VARIABLES
+	// Paths
 	public static boolean isGameSpecified = false;
 	public static boolean isPathSpecified = false;
 	public static String path_save = "";
@@ -114,11 +116,11 @@ public class Start extends JPanel {
 	public static JTextField path_backupField;
 	public static JTextField path_gameField;
 
-	// DATE FORMAT VARIABLES
+	// Date Formats
 	public static JComboBox<Object> date_formatting;
 	public static int date_formatChoosen = 0;
 
-	// CLOUD VARIABLES
+	// Cloud
 	public static boolean cloud_enabled = false;
 	public static JButton cloud_upload;
 	public static JButton cloud_remove;
@@ -135,7 +137,7 @@ public class Start extends JPanel {
 	public static String cloud_username = "";
 	public static String cloud_password = "";
 
-	// LISTENERS
+	// Listeners
 	public static DocumentListener changeListener = new DocumentListener() {
 		public void changedUpdate(DocumentEvent e) {
 			update();
@@ -201,7 +203,7 @@ public class Start extends JPanel {
 							new ProcessBuilder(path_game).start();
 						}
 					} catch (Exception f) {
-						f.printStackTrace();
+						tText("\n[Play ERROR] Operation Failed !", Color.RED);
 					}
 				}
 			});
@@ -233,12 +235,12 @@ public class Start extends JPanel {
 						parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
 						zipFile.createZipFileFromFolder(path_save, parameters, false, 10485760);
 						updateTable(path_backup);
-						tText("\n[File] Backup ", Color.BLACK);
+						tText("\n[Local Manager] Backup ", Color.BLACK);
 						tText(filename.toString(), Color.ORANGE);
 						tText(" was created", Color.BLACK);
 						JOptionPane.showMessageDialog(null, "Backup file created :\n" + filename, "Backup completed", JOptionPane.PLAIN_MESSAGE);
 					} catch (Exception j) {
-						j.printStackTrace();
+						tText("\n[Local Manager ERROR] Operation Failed !", Color.RED);
 					}
 				}
 			});
@@ -254,8 +256,10 @@ public class Start extends JPanel {
 					if (timedBackup_running == true) {
 						new TimebackupService(timedBackup_split);
 						time_buttonStart.setText("Stop");
+						tText("\n[Timed Backup] Operation stopped !", Color.cyan);
 					} else {
 						time_buttonStart.setText("Start");
+						tText("\n[Timed Backup] Operation started !", Color.cyan);
 					}
 				}
 			});
@@ -269,17 +273,13 @@ public class Start extends JPanel {
 		mainWindow.addTab("Settings", setupP2());
 		mainWindow.addTab("Cloud Connection", setupP3());
 		mainWindow.addTab("Log Page", setupLog());
+		tText("\n[Settings] ", Color.BLACK);
+		tText("" + path_info, Color.MAGENTA);
+		tText(" path variables loaded", Color.BLACK);
+		tText("\n[Settings] ", Color.BLACK);
+		tText("" + cloud_info, Color.MAGENTA);
+		tText(" cloud variables loaded", Color.BLACK);
 		update();
-		try {
-			tText("\n[Data Load] ", Color.BLACK);
-			tText("" + path_info, Color.MAGENTA);
-			tText(" path variables loaded", Color.BLACK);
-			tText("\n[Data Load] ", Color.BLACK);
-			tText("" + cloud_info, Color.MAGENTA);
-			tText(" cloud variables loaded", Color.BLACK);
-		} catch (Exception e) {
-
-		}
 		this.add(mainWindow);
 	}
 
@@ -291,7 +291,7 @@ public class Start extends JPanel {
 		DefaultTableModel dm = (DefaultTableModel) table.getModel();
 		dm.getDataVector().removeAllElements();
 		dm.fireTableDataChanged();
-		table.setModel(new DefaultTableModel(getDatabase(backups), table_columns));
+		table.setModel(new DefaultTableModel(getLocalDatabase(backups), table_columns));
 		table.getColumnModel().getColumn(0).setPreferredWidth(1);
 	}
 
@@ -318,11 +318,11 @@ public class Start extends JPanel {
 			dm.fireTableDataChanged();
 			table2.setModel(new DefaultTableModel(getCloudDatabase(ftp.getFiles(ftp.currentDirectory())), table_columns));
 			table2.getColumnModel().getColumn(0).setPreferredWidth(1);
-			tText("\n[FTP Service] File list received", Color.BLACK);
+			tText("\n[Cloud Manager] File list received", Color.BLACK);
 			ftp.close();
-			tText("\n[FTP Service] Connection closed", Color.BLACK);
+			tText("\n[Cloud Manager] Connection closed", Color.BLACK);
 		} catch (Exception e) {
-			e.printStackTrace();
+			tText("\n[Cloud Manager ERROR] Operation Failed !", Color.RED);
 		}
 	}
 
@@ -387,10 +387,7 @@ public class Start extends JPanel {
 			pane.add(buttons1);
 			cloud_refresh.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
-					try {
-						updateTable2();
-					} catch (Exception e) {
-					}
+					updateTable2();
 				}
 			});
 			cloud_remove.addActionListener(new ActionListener() {
@@ -399,24 +396,24 @@ public class Start extends JPanel {
 						if (isAnyCellSelected(table2)) {
 							String selected = new String(table2.getModel().getValueAt(table2.getSelectedRow(), 1).toString());
 							FTPService ftp = new FTPService(cloud_server, cloud_port);
-							tText("\n[FTP Service] Connected to ", Color.BLACK);
+							tText("\n[Cloud Manager] Connected to ", Color.BLACK);
 							tText(cloud_server, Color.BLUE);
 							tText(" @ ", Color.BLACK);
 							tText(cloud_port.toString(), Color.BLUE);
 							ftp.authorize(cloud_username, cloud_password).def();
-							tText("\n[FTP Service] Authorized as ", Color.BLACK);
+							tText("\n[Cloud Manager] Authorized as ", Color.BLACK);
 							tText(cloud_username, Color.BLUE);
 							ftp.removeFile(selected);
-							tText("\n[FTP Service] File ", Color.BLACK);
+							tText("\n[Cloud Manager] File ", Color.BLACK);
 							tText(selected.toString(), Color.ORANGE);
 							tText(" was removed", Color.BLACK);
 							ftp.close();
-							tText("\n[FTP Service] Connection closed", Color.BLACK);
+							tText("\n[Cloud Manager] Connection closed", Color.BLACK);
 							updateTable2();
-							showInfo("Cloud Service", "File removed succesfully !");
+							showInfo("Cloud Manager", "File removed succesfully !");
 						}
 					} catch (Exception e) {
-						e.printStackTrace();
+						tText("\n[Cloud Manager] Operation Failed !", Color.RED);
 					}
 				}
 			});
@@ -426,24 +423,24 @@ public class Start extends JPanel {
 						if (isAnyCellSelected(table2)) {
 							String selected = new String(table2.getModel().getValueAt(table2.getSelectedRow(), 1).toString());
 							FTPService ftp = new FTPService(cloud_server, cloud_port);
-							tText("\n[FTP Service] Connected to ", Color.BLACK);
+							tText("\n[Cloud Manager] Connected to ", Color.BLACK);
 							tText(cloud_server, Color.BLUE);
 							tText(" @ ", Color.BLACK);
 							tText(cloud_port.toString(), Color.BLUE);
 							ftp.authorize(cloud_username, cloud_password).def();
-							tText("\n[FTP Service] Authorized as ", Color.BLACK);
+							tText("\n[Cloud Manager] Authorized as ", Color.BLACK);
 							tText(cloud_username, Color.BLUE);
 							ftp.download(path_backup + "\\" + selected, selected);
-							tText("\n[FTP Service] File ", Color.BLACK);
+							tText("\n[Cloud Manager] File ", Color.BLACK);
 							tText(selected.toString(), Color.ORANGE);
 							tText(" was downloaded", Color.BLACK);
 							ftp.close();
-							tText("\n[FTP Service] Connection closed", Color.BLACK);
+							tText("\n[Cloud Manager] Connection closed", Color.BLACK);
 							update();
-							showInfo("Cloud Service", "File downloaded succesfully !");
+							showInfo("Cloud Manager", "File downloaded succesfully !");
 						}
 					} catch (Exception e) {
-						e.printStackTrace();
+						tText("\n[FTPService ERROR] Operation Failed !", Color.RED);
 					}
 				}
 			});
@@ -537,9 +534,9 @@ public class Start extends JPanel {
 					w.write(cloud_usernameField.getText() + "\n");
 					w.write(cloud_passwordField.getText());
 					w.close();
-					tText("\n[Data Load] Cloud settings saved", Color.BLACK);
+					tText("\n[Settings] Cloud settings saved", Color.BLACK);
 				} catch (Exception j) {
-					j.printStackTrace();
+					tText("\n[Settings ERROR] Operation Failed !", Color.RED);
 				}
 			}
 		});
@@ -674,58 +671,48 @@ public class Start extends JPanel {
 
 		path_saveBrowse.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				try {
-					JFileChooser chooser = new JFileChooser();
-					chooser.setCurrentDirectory(new java.io.File("."));
-					chooser.setDialogTitle("Choose save folder");
-					chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-					chooser.setFileHidingEnabled(false);
-					chooser.setAcceptAllFileFilterUsed(false);
-					if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-						path_save = (chooser.getSelectedFile()).toString();
-						path_saveField.setText(path_save);
-						update();
-					}
-
-				} catch (Exception j) {
+				JFileChooser chooser = new JFileChooser();
+				chooser.setCurrentDirectory(new java.io.File("."));
+				chooser.setDialogTitle("Choose save folder");
+				chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				chooser.setFileHidingEnabled(false);
+				chooser.setAcceptAllFileFilterUsed(false);
+				if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+					path_save = (chooser.getSelectedFile()).toString();
+					path_saveField.setText(path_save);
+					update();
 				}
 			}
 		});
 
 		path_backupBrowse.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				try {
-					JFileChooser chooser = new JFileChooser();
-					chooser.setCurrentDirectory(new java.io.File("."));
-					chooser.setDialogTitle("Choose folder for backups");
-					chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-					chooser.setFileHidingEnabled(false);
-					chooser.setAcceptAllFileFilterUsed(false);
-					if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-						path_backup = (chooser.getSelectedFile()).toString();
-						path_backupField.setText(path_backup);
-						update();
-					}
-				} catch (Exception j) {
+				JFileChooser chooser = new JFileChooser();
+				chooser.setCurrentDirectory(new java.io.File("."));
+				chooser.setDialogTitle("Choose folder for backups");
+				chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+				chooser.setFileHidingEnabled(false);
+				chooser.setAcceptAllFileFilterUsed(false);
+				if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+					path_backup = (chooser.getSelectedFile()).toString();
+					path_backupField.setText(path_backup);
+					update();
 				}
 			}
 		});
 
 		path_gameBrowse.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				try {
-					JFileChooser chooser = new JFileChooser();
-					chooser.setCurrentDirectory(new java.io.File("."));
-					chooser.setDialogTitle("Choose Minecraft launcher");
-					chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-					chooser.setFileHidingEnabled(false);
-					chooser.setAcceptAllFileFilterUsed(false);
-					if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-						path_game = (chooser.getSelectedFile()).toString();
-						path_gameField.setText(path_game);
-						update();
-					}
-				} catch (Exception j) {
+				JFileChooser chooser = new JFileChooser();
+				chooser.setCurrentDirectory(new java.io.File("."));
+				chooser.setDialogTitle("Choose Minecraft launcher");
+				chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+				chooser.setFileHidingEnabled(false);
+				chooser.setAcceptAllFileFilterUsed(false);
+				if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+					path_game = (chooser.getSelectedFile()).toString();
+					path_gameField.setText(path_game);
+					update();
 				}
 			}
 		});
@@ -748,9 +735,9 @@ public class Start extends JPanel {
 					w.write((timedBackup_enabled == true ? 1 : 0) + "\n");
 					w.write(timedBackup_split + "");
 					w.close();
-					tText("[Data Load] Settings saved", Color.BLACK);
+					tText("[Settings] Path settings saved", Color.BLACK);
 				} catch (Exception j) {
-					j.printStackTrace();
+					tText("\n[Settings ERROR] Operation Failed !", Color.RED);
 				}
 			}
 		});
@@ -761,124 +748,135 @@ public class Start extends JPanel {
 
 	public JPanel setupP1() { // TODO PANE_BACKUPS
 		JPanel pane = new JPanel();
-		try {
-			pane.setLayout(new BoxLayout(pane, BoxLayout.PAGE_AXIS));
-			JPanel listing = new JPanel();
-			pane.add(listing);
-			table = new JTable();
-			table.setModel(new DefaultTableModel(getDatabase(path_backup), table_columns));
-			table.setPreferredScrollableViewportSize(new Dimension(570, 150));
-			table.setFillsViewportHeight(true);
-			table.getColumnModel().getColumn(0).setPreferredWidth(1);
-			table.addMouseListener(new java.awt.event.MouseAdapter() {
-				public void mouseClicked(java.awt.event.MouseEvent e) {
-					updateManager();
-				}
-			});
-			JScrollPane slr = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-			listing.add(slr);
-			JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER));
+		pane.setLayout(new BoxLayout(pane, BoxLayout.PAGE_AXIS));
+		JPanel listing = new JPanel();
+		pane.add(listing);
+		table = new JTable();
+		table.setModel(new DefaultTableModel(getLocalDatabase(path_backup), table_columns));
+		table.setPreferredScrollableViewportSize(new Dimension(570, 150));
+		table.setFillsViewportHeight(true);
+		table.getColumnModel().getColumn(0).setPreferredWidth(1);
+		table.addMouseListener(new java.awt.event.MouseAdapter() {
+			public void mouseClicked(java.awt.event.MouseEvent e) {
+				updateManager();
+			}
+		});
+		JScrollPane slr = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		listing.add(slr);
+
+		// Upper Buttons
+		JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER));
+		{
 			buttons.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Local"));
-			pane.add(buttons);
+
 			manager_loadOther = new JButton("External Load");
-			buttons.add(manager_loadOther);
 			manager_loadSelected = new JButton("Load");
-			buttons.add(manager_loadSelected);
 			manager_rename = new JButton("Rename");
-			buttons.add(manager_rename);
 			manager_remove = new JButton("Remove");
-			buttons.add(manager_remove);
 			manager_description = new JButton("Description");
+
+			buttons.add(manager_loadOther);
+			buttons.add(manager_loadSelected);
+			buttons.add(manager_rename);
+			buttons.add(manager_remove);
 			buttons.add(manager_description);
-			JPanel buttons2 = new JPanel(new FlowLayout(FlowLayout.CENTER));
+
+			pane.add(buttons);
+		}
+
+		// Lower Buttons
+		JPanel buttons2 = new JPanel(new FlowLayout(FlowLayout.CENTER));
+		{
 			buttons2.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Cloud"));
-			pane.add(buttons2);
+
 			cloud_upload = new JButton("Upload");
+
 			cloud_upload.setEnabled(cloud_enabled);
+
 			buttons2.add(cloud_upload);
-			updateManager();
-			manager_loadOther.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					try {
-						JFileChooser chooser = new JFileChooser();
-						chooser.setCurrentDirectory(new java.io.File("."));
-						chooser.setDialogTitle("Choose backup to load");
-						chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-						chooser.setFileHidingEnabled(false);
-						chooser.setAcceptAllFileFilterUsed(false);
-						if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-							String path = chooser.getSelectedFile().getCanonicalPath();
-							if (JOptionPane.showConfirmDialog(null, "Do you really want to retrieve files from backup ?"
-									+ "\nThis will remove all current files in specified path" + "\nand place there all files from :\n" + path,
-									"Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
-								delete(new File(path_save));
-								tText("\n[Backup] Save at ", Color.BLACK);
-								tText(path_save, Color.ORANGE);
-								tText(" was removed", Color.BLACK);
-								ZipFile zipFile = new ZipFile(path);
-								tText("\n[Backup] Extracting files ...", Color.BLACK);
-								zipFile.extractAll(path_save.substring(0, path_save.lastIndexOf("\\")));
-								JOptionPane.showMessageDialog(null, "Backup file loaded :\n" + path, "Load completed", JOptionPane.PLAIN_MESSAGE);
-								tText("\n[Backup] Backup file ", Color.BLACK);
-								tText(chooser.getSelectedFile().getName(), Color.ORANGE);
-								tText(" was loaded", Color.BLACK);
+
+			pane.add(buttons2);
+		}
+
+		updateManager();
+
+		manager_loadOther.addActionListener(new ActionListener() {// TODO loadExternal
+					public void actionPerformed(ActionEvent e) {
+						try {
+							JFileChooser chooser = new JFileChooser();
+							chooser.setCurrentDirectory(new java.io.File("."));
+							chooser.setDialogTitle("Choose backup to load");
+							chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+							chooser.setFileHidingEnabled(false);
+							chooser.setAcceptAllFileFilterUsed(false);
+							if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+								String path = chooser.getSelectedFile().getCanonicalPath();
+								if (JOptionPane.showConfirmDialog(null, "Do you really want to retrieve files from backup ?"
+										+ "\nThis will remove all current files in specified path" + "\nand place there all files from :\n" + path,
+										"Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
+									delete(new File(path_save));
+									tText("\n[Local Manager] Save at ", Color.BLACK);
+									tText(path_save, Color.ORANGE);
+									tText(" was removed", Color.BLACK);
+									ZipFile zipFile = new ZipFile(path);
+									tText("\n[Local Manager] Extracting files ...", Color.BLACK);
+									zipFile.extractAll(path_save.substring(0, path_save.lastIndexOf("\\")));
+									JOptionPane.showMessageDialog(null, "Backup file loaded :\n" + path, "Load completed", JOptionPane.PLAIN_MESSAGE);
+									tText("\n[Local Manager] Backup file ", Color.BLACK);
+									tText(chooser.getSelectedFile().getName(), Color.ORANGE);
+									tText(" was loaded", Color.BLACK);
+								}
 							}
+						} catch (Exception f) {
+							tText("\n[Local Manager] Operation Failed !", Color.RED);
 						}
-					} catch (Exception f) {
-						f.printStackTrace();
 					}
-				}
-			});
-			// Removes selected backup file
-			manager_remove.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					try {
+				});
+
+		manager_remove.addActionListener(new ActionListener() {// TODO removeLocal
+					public void actionPerformed(ActionEvent e) {
 						if (isAnyCellSelected(table)) {
 							Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
 							String deletepath = path_backup + "\\" + selected;
 							delete(new File(deletepath));
 							updateTable(path_backup);
-							tText("\n[File] File ", Color.BLACK);
+							tText("\n[Local Manager] File ", Color.BLACK);
 							tText(selected.toString(), Color.ORANGE);
 							tText(" was removed", Color.BLACK);
 						}
-					} catch (Exception j) {
-						j.printStackTrace();
 					}
-				}
-			});
-			// Loads selected backup file
-			manager_loadSelected.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					try {
-						if (isAnyCellSelected(table)) {
-							Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
-							String path = path_backup + "\\" + selected;
-							if (JOptionPane.showConfirmDialog(null, "Do you really want to retrieve files from backup ?"
-									+ "\nThis will remove all current files in specified path" + "\nand place there all files from :\n" + path,
-									"Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
-								delete(new File(path_save));
-								tText("\n[Backup] Save at ", Color.BLACK);
-								tText(path_save, Color.ORANGE);
-								tText(" was removed", Color.BLACK);
-								ZipFile zipFile = new ZipFile(path);
-								tText("\n[Backup] Extracting files ...", Color.BLACK);
-								zipFile.extractAll(path_save.substring(0, path_save.lastIndexOf("\\")));
-								JOptionPane.showMessageDialog(null, "Backup file loaded :\n" + path, "Load completed", JOptionPane.PLAIN_MESSAGE);
-								tText("\n[Backup] Backup file ", Color.BLACK);
-								tText(selected.toString(), Color.ORANGE);
-								tText(" was loaded", Color.BLACK);
+				});
+
+		manager_loadSelected.addActionListener(new ActionListener() { // TODO loadLocal
+					public void actionPerformed(ActionEvent e) {
+						try {
+							if (isAnyCellSelected(table)) {
+								Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
+								String path = path_backup + "\\" + selected;
+								if (JOptionPane.showConfirmDialog(null, "Do you really want to retrieve files from backup ?"
+										+ "\nThis will remove all current files in specified path" + "\nand place there all files from :\n" + path,
+										"Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
+									delete(new File(path_save));
+									tText("\n[Local Manager] Save at ", Color.BLACK);
+									tText(path_save, Color.ORANGE);
+									tText(" was removed", Color.BLACK);
+									ZipFile zipFile = new ZipFile(path);
+									tText("\n[Local Manager] Extracting files ...", Color.BLACK);
+									zipFile.extractAll(path_save.substring(0, path_save.lastIndexOf("\\")));
+									JOptionPane.showMessageDialog(null, "Backup file loaded :\n" + path, "Load completed", JOptionPane.PLAIN_MESSAGE);
+									tText("\n[Local Manager] Backup file ", Color.BLACK);
+									tText(selected.toString(), Color.ORANGE);
+									tText(" was loaded", Color.BLACK);
+								}
 							}
+						} catch (Exception j) {
+							tText("\n[Local Manager ERROR] Operation Failed !", Color.RED);
 						}
-					} catch (Exception j) {
-						j.printStackTrace();
 					}
-				}
-			});
-			// Changes name of selected file
-			manager_rename.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					try {
+				});
+
+		manager_rename.addActionListener(new ActionListener() { // TODO renameLocal
+					public void actionPerformed(ActionEvent e) {
 						if (isAnyCellSelected(table)) {
 							Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
 							String path = path_backup + "\\" + selected;
@@ -887,114 +885,108 @@ public class Start extends JPanel {
 							if ((newName != null) && (newName.length() > 0)) {
 								File sel = new File(path);
 								sel.renameTo(new File(path_backup + "\\" + newName + ".zip"));
-								tText("\n[File] File ", Color.BLACK);
+								tText("\n[Local Manager] File ", Color.BLACK);
 								tText(selected.toString(), Color.ORANGE);
 								tText(" was renamed to ", Color.BLACK);
 								tText(newName, Color.ORANGE);
 							} else {
-								tText("\n[File] File ", Color.BLACK);
-								tText(selected.toString(), Color.ORANGE);
-								tText(" failed to be renamed", Color.BLACK);
+								tText("\n[Local Manager ERROR] Operation Failed !", Color.RED);
 							}
 							updateTable(path_backup);
 						}
-					} catch (Exception j) {
-						j.printStackTrace();
 					}
-				}
-			});
-			// Adds description file //TODO for cloud
-			manager_description.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					try {
-						if (isAnyCellSelected(table)) {
-							Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
-							String path = path_backup + "\\" + selected;
-							String description_text = null;
-							if (new File(new File(path)
-									.getCanonicalPath()
-									.toString()
-									.replace(new File(path).getName(),
-											new File(path).getName().substring(0, new File(path).getName().length() - 3) + "decr")).exists())
-								description_text = new String(Files.readAllBytes(Paths.get(new File(new File(path)
-										.getCanonicalPath()
-										.toString()
-										.replace(new File(path).getName(),
-												new File(path).getName().substring(0, new File(path).getName().length() - 3) + "decr"))
-										.getCanonicalPath())));
-							description_text = (String) JOptionPane.showInputDialog(null,
-									"Enter a description: \n-Leave blank to remove description", "File description for " + selected,
-									JOptionPane.PLAIN_MESSAGE, null, null, description_text);
-							if (description_text != (null) && description_text.length() > 0) {
-								BufferedWriter w = new BufferedWriter(new FileWriter(new File(new File(path)
-										.getCanonicalPath()
-										.toString()
-										.replace(new File(path).getName(),
-												new File(path).getName().substring(0, new File(path).getName().length() - 3) + "decr"))
-										.getCanonicalPath()));
-								w.write(description_text);
-								w.close();
-								tText("\n[File] Description of ", Color.BLACK);
-								tText(selected.toString(), Color.ORANGE);
-								tText(" was created", Color.BLACK);
-							} else if (description_text == null) {
-								// Do nothing if returned NULL (CANCEL BUTTON)
-							} else {
+				});
+
+		manager_description.addActionListener(new ActionListener() { // TODO descriptionLocal
+					public void actionPerformed(ActionEvent e) {
+						try {
+							if (isAnyCellSelected(table)) {
+								Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
+								String path = path_backup + "\\" + selected;
+								String description_text = null;
 								if (new File(new File(path)
 										.getCanonicalPath()
 										.toString()
 										.replace(new File(path).getName(),
 												new File(path).getName().substring(0, new File(path).getName().length() - 3) + "decr")).exists())
-									new File(new File(path)
+									description_text = new String(Files.readAllBytes(Paths.get(new File(new File(path)
 											.getCanonicalPath()
 											.toString()
 											.replace(new File(path).getName(),
-													new File(path).getName().substring(0, new File(path).getName().length() - 3) + "decr")).delete();
-								tText("\n[File] Description of ", Color.BLACK);
-								tText(selected.toString(), Color.ORANGE);
-								tText(" was removed", Color.BLACK);
-							}
-							update();
-						}
-					} catch (Exception f) {
-						f.printStackTrace();
-					}
-				}
-			});
-			// Cloud
-			cloud_upload.addActionListener(new ActionListener() {// TODO CLOUD
-						public void actionPerformed(ActionEvent e) {
-							try {
-								if (isAnyCellSelected(table)) {
-									Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
-									String path = path_backup + "\\" + selected;
-									FTPService ftp = new FTPService(cloud_server, cloud_port);
-									tText("\n[FTP Service] Connected to ", Color.BLACK);
-									tText(cloud_server, Color.BLUE);
-									tText(" @ ", Color.BLACK);
-									tText(cloud_port.toString(), Color.BLUE);
-									ftp.authorize(cloud_username, cloud_password).def();
-									tText("\n[FTP Service] Authorized as ", Color.BLACK);
-									tText(cloud_username, Color.BLUE);
-									ftp.upload(path, "");
-									tText("\n[FTP Service] File ", Color.BLACK);
+													new File(path).getName().substring(0, new File(path).getName().length() - 3) + "decr"))
+											.getCanonicalPath())));
+								description_text = (String) JOptionPane.showInputDialog(null,
+										"Enter a description: \n-Leave blank to remove description", "File description for " + selected,
+										JOptionPane.PLAIN_MESSAGE, null, null, description_text);
+								if (description_text != (null) && description_text.length() > 0) {
+									BufferedWriter w = new BufferedWriter(new FileWriter(new File(new File(path)
+											.getCanonicalPath()
+											.toString()
+											.replace(new File(path).getName(),
+													new File(path).getName().substring(0, new File(path).getName().length() - 3) + "decr"))
+											.getCanonicalPath()));
+									w.write(description_text);
+									w.close();
+									tText("\n[Local Manager] Description of ", Color.BLACK);
 									tText(selected.toString(), Color.ORANGE);
-									tText(" uploaded", Color.BLACK);
-									ftp.close();
-									tText("\n[FTP Service] Connection closed", Color.BLACK);
+									tText(" was created", Color.BLACK);
+								} else if (description_text == null) {
+									// Do nothing if returned NULL (CANCEL BUTTON)
+								} else {
+									if (new File(new File(path)
+											.getCanonicalPath()
+											.toString()
+											.replace(new File(path).getName(),
+													new File(path).getName().substring(0, new File(path).getName().length() - 3) + "decr")).exists())
+										new File(new File(path)
+												.getCanonicalPath()
+												.toString()
+												.replace(new File(path).getName(),
+														new File(path).getName().substring(0, new File(path).getName().length() - 3) + "decr"))
+												.delete();
+									tText("\n[Local Manager] Description of ", Color.BLACK);
+									tText(selected.toString(), Color.ORANGE);
+									tText(" was removed", Color.BLACK);
 								}
-							} catch (Exception f) {
-								f.printStackTrace();
+								update();
 							}
+						} catch (Exception f) {
+							tText("\n[Local Manager ERROR] Operation Failed !", Color.RED);
 						}
-					});
-		} catch (Exception j) {
-			j.printStackTrace();
-		}
+					}
+				});
+
+		cloud_upload.addActionListener(new ActionListener() {// TODO uploadToCloud
+					public void actionPerformed(ActionEvent e) {
+						try {
+							if (isAnyCellSelected(table)) {
+								Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
+								String path = path_backup + "\\" + selected;
+								FTPService ftp = new FTPService(cloud_server, cloud_port);
+								tText("\n[Cloud Manager] Connected to ", Color.BLACK);
+								tText(cloud_server, Color.BLUE);
+								tText(" @ ", Color.BLACK);
+								tText(cloud_port.toString(), Color.BLUE);
+								ftp.authorize(cloud_username, cloud_password).def();
+								tText("\n[Cloud Manager] Authorized as ", Color.BLACK);
+								tText(cloud_username, Color.BLUE);
+								ftp.upload(path, "");
+								tText("\n[Cloud Manager] File ", Color.BLACK);
+								tText(selected.toString(), Color.ORANGE);
+								tText(" uploaded", Color.BLACK);
+								ftp.close();
+								tText("\n[Cloud Manager] Connection closed", Color.BLACK);
+							}
+						} catch (Exception f) {
+							tText("\n[Cloud Manager ERROR] Operation Failed !", Color.RED);
+						}
+					}
+				});
+
 		return pane;
 	}
 
-	public static void update() {// TODO -_-
+	public static void update() {// TODO update
 		path_save = path_saveField.getText();
 		path_backup = path_backupField.getText();
 		path_game = path_gameField.getText();
@@ -1025,7 +1017,7 @@ public class Start extends JPanel {
 		});
 	}
 
-	public static Object[][] getDatabase(String location) { // TODO
+	public static Object[][] getLocalDatabase(String location) { // TODO getLocalDatabase
 		if (!(new File(location).exists())) return new Object[][] {};
 		DateFormat dateFormat = new SimpleDateFormat(date_formats[date_formatChoosen]);
 		File[] files = getFileList(location, ".decr");
@@ -1051,7 +1043,7 @@ public class Start extends JPanel {
 						.replace(pr_fileName, pr_fileName.substring(0, pr_fileName.length() - 3) + "decr"));
 				if (pr_file.exists()) {
 					mix[i][4] = new String(Files.readAllBytes(Paths.get(pr_file.getCanonicalPath())));
-					tText("\n[File] Description for ", Color.BLACK);
+					tText("\n[Local Manager] Description for ", Color.BLACK);
 					tText(files[i].getName(), Color.ORANGE);
 					tText(" was loaded", Color.black);
 				}
@@ -1061,7 +1053,7 @@ public class Start extends JPanel {
 		return mix;
 	}
 
-	public static Object[][] getCloudDatabase(FTPFile[] files) {
+	public static Object[][] getCloudDatabase(FTPFile[] files) { // TODO getCloudDatabase
 		DateFormat dateFormat = new SimpleDateFormat(date_formats[date_formatChoosen]);
 		String[] dates = new String[files.length];
 		long[] size = new long[files.length];
