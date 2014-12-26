@@ -9,6 +9,7 @@ import it.sauronsoftware.ftp4j.FTPFile;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedWriter;
@@ -1083,6 +1084,7 @@ public class Start extends JPanel {
 			ex.printStackTrace();
 		}
 		JFrame Frame = new JFrame("Minecraft Backup Utility | CC-BY-NC-ND by mar21");
+		Frame.setIconImage(Toolkit.getDefaultToolkit().getImage(Start.class.getClass().getResource("/icon16.png")));
 		Frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		Frame.setResizable(false);
 		Start Content = new Start();
