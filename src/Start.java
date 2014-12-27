@@ -82,6 +82,7 @@ public class Start extends JPanel {
 	public static JTable table;
 	public static JTable table2;
 	public static String[] table_columns = { "#", "Name", "Date", "Size", "Description" };
+	public static String[] table2_columns = { "#", "Name", "Date", "Size" };
 	public static String[] date_formats = { "dd/MM/yy HH:mm:ss", "dd-MM-yy HH:mm:ss", "dd.MM.yy HH:mm:ss", "MM/dd/yy HH:mm:ss", "MM-dd-yy HH:mm:ss",
 			"MM.dd.yy HH:mm:ss" };
 
@@ -123,6 +124,7 @@ public class Start extends JPanel {
 
 	// Cloud
 	public static boolean cloud_enabled = false;
+	public static boolean cloud_isSelected = false;
 	public static JButton cloud_upload;
 	public static JButton cloud_remove;
 	public static JButton cloud_download;
@@ -302,6 +304,7 @@ public class Start extends JPanel {
 		manager_remove.setEnabled(manager_isSelected);
 		manager_rename.setEnabled(manager_isSelected);
 		manager_description.setEnabled(manager_isSelected);
+		cloud_upload.setEnabled(cloud_enabled && manager_isSelected);
 	}
 
 	public static void updateTable2() {
@@ -317,7 +320,7 @@ public class Start extends JPanel {
 			DefaultTableModel dm = (DefaultTableModel) table2.getModel();
 			dm.getDataVector().removeAllElements();
 			dm.fireTableDataChanged();
-			table2.setModel(new DefaultTableModel(getCloudDatabase(ftp.getFiles(ftp.currentDirectory())), table_columns));
+			table2.setModel(new DefaultTableModel(getCloudDatabase(ftp.getFiles(ftp.currentDirectory())), table2_columns));
 			table2.getColumnModel().getColumn(0).setPreferredWidth(1);
 			tText("\n[Cloud Manager] File list received", Color.BLACK);
 			ftp.close();
@@ -367,10 +370,15 @@ public class Start extends JPanel {
 			JPanel listing = new JPanel();
 			pane.add(listing);
 			table2 = new JTable();
-			table2.setModel(new DefaultTableModel(new Object[][] {}, table_columns));
+			table2.setModel(new DefaultTableModel(new Object[][] {}, table2_columns));
 			table2.setPreferredScrollableViewportSize(new Dimension(570, 150));
 			table2.setFillsViewportHeight(true);
 			table2.getColumnModel().getColumn(0).setPreferredWidth(1);
+			table2.addMouseListener(new java.awt.event.MouseAdapter() {
+				public void mouseClicked(java.awt.event.MouseEvent e) {
+					updateCloudManager();
+				}
+			});
 			JScrollPane slr2 = new JScrollPane(table2, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 			listing.add(slr2);
 			JPanel buttons1 = new JPanel();
@@ -840,6 +848,10 @@ public class Start extends JPanel {
 							Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
 							String deletepath = path_backup + "\\" + selected;
 							delete(new File(deletepath));
+							String descpath = deletepath.substring(0, deletepath.length() - 4) + ".decr";
+							if (new File(descpath).exists()) {
+								delete(new File(descpath));
+							}
 							updateTable(path_backup);
 							tText("\n[Local Manager] File ", Color.BLACK);
 							tText(selected.toString(), Color.ORANGE);
@@ -882,10 +894,15 @@ public class Start extends JPanel {
 							Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
 							String path = path_backup + "\\" + selected;
 							String newName = (String) JOptionPane.showInputDialog(null, "Enter new name for file: ", "Rename file: " + selected,
-									JOptionPane.PLAIN_MESSAGE, null, null, selected.toString().replace(".zip", ""));
+									JOptionPane.PLAIN_MESSAGE, null, null, selected.toString().substring(0, selected.toString().length() - 4));
 							if ((newName != null) && (newName.length() > 0)) {
 								File sel = new File(path);
-								sel.renameTo(new File(path_backup + "\\" + newName + ".zip"));
+								String filepath = path_backup + "\\" + newName;
+								sel.renameTo(new File(filepath + ".zip"));
+								if (new File(path.substring(0, path.length() - 4) + ".decr").exists()) {
+									File description = new File(path.substring(0, path.length() - 4) + ".decr");
+									description.renameTo(new File(filepath + ".decr"));
+								}
 								tText("\n[Local Manager] File ", Color.BLACK);
 								tText(selected.toString(), Color.ORANGE);
 								tText(" was renamed to ", Color.BLACK);
@@ -987,22 +1004,28 @@ public class Start extends JPanel {
 		return pane;
 	}
 
+	public static void updateCloudManager() {
+		cloud_isSelected = (table2.getSelectedColumn() != -1) ? true : false;
+		cloud_enabled = cloud_checkboxEnable.isSelected();
+		cloud_download.setEnabled(cloud_enabled && cloud_isSelected);
+		cloud_remove.setEnabled(cloud_enabled && cloud_isSelected);
+	}
+
 	public static void update() {// TODO update
 		path_save = path_saveField.getText();
 		path_backup = path_backupField.getText();
 		path_game = path_gameField.getText();
+		cloud_enabled = cloud_checkboxEnable.isSelected();
+		cloud_upload.setEnabled(cloud_enabled && manager_isSelected);
+		cloud_refresh.setEnabled(cloud_enabled);
+		updateCloudManager();
 		timedBackup_split = (Integer) time_spinnerSeconds.getValue() + (Integer) time_spinnerMinutes.getValue() * 60
 				+ (Integer) time_spinnerHours.getValue() * 3600;
 		timedBackup_enabled = time_checkboxEnable.isSelected();
-		cloud_enabled = cloud_checkboxEnable.isSelected();
 		time_buttonStart.setEnabled(timedBackup_enabled && isPathSpecified);
 		time_spinnerHours.setEnabled(timedBackup_enabled);
 		time_spinnerMinutes.setEnabled(timedBackup_enabled);
 		time_spinnerSeconds.setEnabled(timedBackup_enabled);
-		cloud_download.setEnabled(cloud_enabled);
-		cloud_upload.setEnabled(cloud_enabled);
-		cloud_remove.setEnabled(cloud_enabled);
-		cloud_refresh.setEnabled(cloud_enabled);
 		isPathSpecified = (!path_save.equals("") && !path_backup.equals("")) ? true : false;
 		isGameSpecified = (!path_game.equals("")) ? true : false;
 		window_createBackup.setEnabled(isPathSpecified);
@@ -1021,7 +1044,7 @@ public class Start extends JPanel {
 	public static Object[][] getLocalDatabase(String location) { // TODO getLocalDatabase
 		if (!(new File(location).exists())) return new Object[][] {};
 		DateFormat dateFormat = new SimpleDateFormat(date_formats[date_formatChoosen]);
-		File[] files = getFileList(location, ".decr");
+		File[] files = getFileList(location, ".zip");
 		String[] dates = new String[files.length];
 		long[] size = new long[files.length];
 		String[] names = new String[files.length];
@@ -1054,7 +1077,14 @@ public class Start extends JPanel {
 		return mix;
 	}
 
-	public static Object[][] getCloudDatabase(FTPFile[] files) { // TODO getCloudDatabase
+	public static Object[][] getCloudDatabase(FTPFile[] raw_files) { // TODO getCloudDatabase
+		ArrayList<FTPFile> zipOnly = new ArrayList<FTPFile>();
+		for (FTPFile f : raw_files) {
+			String f_name = f.getName();
+			if (f_name.substring(f_name.length() - 4, f_name.length()).equals(".zip")) zipOnly.add(f);
+		}
+		FTPFile[] files = new FTPFile[zipOnly.size()];
+		files = zipOnly.toArray(files);
 		DateFormat dateFormat = new SimpleDateFormat(date_formats[date_formatChoosen]);
 		String[] dates = new String[files.length];
 		long[] size = new long[files.length];
@@ -1065,7 +1095,7 @@ public class Start extends JPanel {
 			dates[i] = dateFormat.format(files[i].getModifiedDate());
 			size[i] = files[i].getSize();
 		}
-		Object[][] mix = new Object[names.length][4];
+		Object[][] mix = new Object[files.length][4];
 		for (int i = 0; i < files.length; i++) {
 			mix[i][0] = i + 1;
 			mix[i][1] = names[i];
@@ -1111,13 +1141,15 @@ public class Start extends JPanel {
 		return new File(path).isDirectory() ? new File(path).list() : null;
 	}
 
-	public static File[] getFileList(String path, String notReturn) {
+	public static File[] getFileList(String path, String doReturn) {
 		File folder = new File(path);
 		if (folder.isDirectory()) {
 			File[] temp = folder.listFiles();
 			ArrayList<File> validFiles = new ArrayList<File>();
-			for (File f : temp)
-				if (f.getName().contains(".zip")) validFiles.add(f);
+			for (File f : temp) {
+				String f_name = f.getName();
+				if (f_name.substring(f_name.length() - 4, f_name.length()).equals(doReturn)) validFiles.add(f);
+			}
 			File[] returnArray = new File[validFiles.size()];
 			returnArray = validFiles.toArray(returnArray);
 			return returnArray;
