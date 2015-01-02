@@ -5,6 +5,8 @@ import java.util.Calendar;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import javax.swing.JOptionPane;
+
 import net.lingala.zip4j.core.ZipFile;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.util.Zip4jConstants;
@@ -23,6 +25,9 @@ public class TimebackupService {
 			try {
 				Calendar cal = Calendar.getInstance();
 				DateFormat dateFormat = new SimpleDateFormat("yy_MM_dd");
+				java.awt.Toolkit.getDefaultToolkit().beep();
+				JOptionPane.showMessageDialog(null, "Make sure that autosaving is disabled\nor game is not running !", "Confirm backup creation",
+						JOptionPane.PLAIN_MESSAGE);
 				Start.filename = Start.path_backup + "\\backup" + "_" + dateFormat.format(cal.getTime()) + ".zip";
 				if (new File(Start.path_backup + "\\backup" + "_" + dateFormat.format(cal.getTime()) + ".zip").isFile()) {
 					for (int i = 1;; i++) {
