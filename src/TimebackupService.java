@@ -7,10 +7,6 @@ import java.util.TimerTask;
 
 import javax.swing.JOptionPane;
 
-import net.lingala.zip4j.core.ZipFile;
-import net.lingala.zip4j.model.ZipParameters;
-import net.lingala.zip4j.util.Zip4jConstants;
-
 public class TimebackupService {
 
 	Timer backupTimer;
@@ -38,12 +34,7 @@ public class TimebackupService {
 						break;
 					}
 				}
-				ZipFile zipFile;
-				zipFile = new ZipFile(Start.filename);
-				ZipParameters parameters = new ZipParameters();
-				parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
-				parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
-				zipFile.createZipFileFromFolder(Start.path_save, parameters, false, 10485760);
+				Start.compress(Start.compiler.ZIP, Start.path_save, Start.filename);
 				Start.updateTable(Start.path_backup);
 			} catch (Exception e) {
 

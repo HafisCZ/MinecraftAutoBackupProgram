@@ -81,8 +81,8 @@ public class Start extends JPanel {
 	// Tables
 	public static JTable table;
 	public static JTable table2;
-	public static String[] table_columns = { "#", "Name", "Date", "Size", "Description" };
-	public static String[] table2_columns = { "#", "Name", "Date", "Size" };
+	public static String[] table_columns = { "#", "Name", "Modify Time", "Size", "Description" };
+	public static String[] table2_columns = { "#", "Name", "Modify Time", "Size" };
 	public static String[] date_formats = { "dd/MM/yy HH:mm:ss", "dd-MM-yy HH:mm:ss", "dd.MM.yy HH:mm:ss", "MM/dd/yy HH:mm:ss", "MM-dd-yy HH:mm:ss",
 			"MM.dd.yy HH:mm:ss" };
 
@@ -154,6 +154,10 @@ public class Start extends JPanel {
 			update();
 		}
 	};
+
+	public enum compiler {
+		ZIP, RAR
+	}
 
 	public Start() {
 		this.setFocusable(false);
@@ -232,11 +236,7 @@ public class Start extends JPanel {
 								break;
 							}
 						}
-						ZipFile zipFile = new ZipFile(filename);
-						ZipParameters parameters = new ZipParameters();
-						parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
-						parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
-						zipFile.createZipFileFromFolder(path_save, parameters, false, 10485760);
+						compress(compiler.ZIP, path_save, filename);
 						updateTable(path_backup);
 						tText("\n[Local Manager] Backup ", Color.BLACK);
 						tText(filename.toString(), Color.ORANGE);
@@ -271,11 +271,12 @@ public class Start extends JPanel {
 		this.add(subPanel);
 		// Creates a Tabbed pane
 		JTabbedPane mainWindow = new JTabbedPane();
-		mainWindow.addTab("Local Backups", setupP1());
-		mainWindow.addTab("Cloud Backups", setupP1B());
-		mainWindow.addTab("Settings", setupP2());
-		mainWindow.addTab("Cloud Connection", setupP3());
-		mainWindow.addTab("Log Page", setupLog());
+		mainWindow.addTab("Local Backups", tabLocalBackups());
+		mainWindow.addTab("Cloud Backups", tabCloudBackups());
+		mainWindow.addTab("Global Settings", tabGlobalSettings());
+		mainWindow.addTab("Backup Settings", tabBackupSettings());
+		mainWindow.addTab("Cloud Setup", tabCloudSettings());
+		mainWindow.addTab("Log Page", tabLog());
 		tText("\n[Settings] ", Color.BLACK);
 		tText("" + path_info, Color.MAGENTA);
 		tText(" path variables loaded", Color.BLACK);
@@ -337,8 +338,7 @@ public class Start extends JPanel {
 		return style;
 	}
 
-	public JPanel setupLog() { // TODO LOG LIST - RECEIVE ALL OPERATION STATUSES
-								// & DATA CHANGES & UPDATES
+	public JPanel tabLog() {
 		JPanel pane = new JPanel();
 		pane.setLayout(new BoxLayout(pane, BoxLayout.PAGE_AXIS));
 		logAreaDoc = new DefaultStyledDocument();
@@ -363,7 +363,7 @@ public class Start extends JPanel {
 		return pane;
 	}
 
-	public JPanel setupP1B() { // TODO PANE_CLOUDLIST
+	public JPanel tabCloudBackups() { // TODO PANE_CLOUDLIST
 		JPanel pane = new JPanel();
 		try {
 			pane.setLayout(new BoxLayout(pane, BoxLayout.PAGE_AXIS));
@@ -459,15 +459,7 @@ public class Start extends JPanel {
 		return pane;
 	}
 
-	public static void tText(String text, Color color) {
-		try {
-			logAreaDoc.insertString(logAreaDoc.getLength(), text, setColor(color));
-		} catch (BadLocationException e) {
-			e.printStackTrace();
-		}
-	}
-
-	public JPanel setupP3() { // TODO PANE_CLOUD
+	public JPanel tabCloudSettings() { // TODO PANE_CLOUD
 		JPanel pane = new JPanel();
 		pane.setLayout(new BoxLayout(pane, BoxLayout.PAGE_AXIS));
 		JLabel cloud_l0 = new JLabel("Currently supporting only FTP transfer, Google Drive access / others will be added in future.");
@@ -554,7 +546,20 @@ public class Start extends JPanel {
 		return pane;
 	}
 
-	public JPanel setupP2() { // TODO PANE_SETTINGS
+	public JPanel tabBackupSettings() {
+		JPanel pane = new JPanel();
+		pane.setLayout(new BoxLayout(pane, BoxLayout.PAGE_AXIS));
+
+		JPanel subpanel1 = new JPanel();
+		subpanel1.setLayout(new FlowLayout());
+		subpanel1.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Time stamp"));
+
+		pane.add(subpanel1);
+
+		return pane;
+	}
+
+	public JPanel tabGlobalSettings() { // TODO PANE_SETTINGS
 		JPanel pane = new JPanel();
 		pane.setLayout(new BoxLayout(pane, BoxLayout.PAGE_AXIS));
 
@@ -617,7 +622,7 @@ public class Start extends JPanel {
 
 		JPanel sub4 = new JPanel();
 		sub4.setLayout(new FlowLayout());
-		sub4.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Auto-Backup"));
+		sub4.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Timed notifications"));
 		{
 			time_checkboxEnable = new JCheckBox();
 			time_checkboxEnable.setText("Enabled");
@@ -649,9 +654,9 @@ public class Start extends JPanel {
 
 		JPanel sub5 = new JPanel();
 		sub5.setLayout(new FlowLayout());
-		sub5.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Date-Time Formatting"));
+		sub5.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Time format"));
 		{
-			JLabel date_formattingLabel = new JLabel("Date-Time format: ");
+			JLabel date_formattingLabel = new JLabel("Time format: ");
 			date_formattingLabel.setFont(getFont().deriveFont(labelFont));
 			sub5.add(date_formattingLabel);
 			date_formatting = new JComboBox<Object>(date_formats);
@@ -755,7 +760,7 @@ public class Start extends JPanel {
 		return pane;
 	}
 
-	public JPanel setupP1() { // TODO PANE_BACKUPS
+	public JPanel tabLocalBackups() { // TODO PANE_BACKUPS
 		JPanel pane = new JPanel();
 		pane.setLayout(new BoxLayout(pane, BoxLayout.PAGE_AXIS));
 		JPanel listing = new JPanel();
@@ -775,37 +780,29 @@ public class Start extends JPanel {
 
 		// Upper Buttons
 		JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER));
-		{
-			buttons.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Local"));
+		buttons.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Local"));
 
-			manager_loadOther = new JButton("External Load");
-			manager_loadSelected = new JButton("Load");
-			manager_rename = new JButton("Rename");
-			manager_remove = new JButton("Remove");
-			manager_description = new JButton("Description");
+		manager_loadOther = new JButton("External Load");
+		manager_loadSelected = new JButton("Load");
+		manager_rename = new JButton("Rename");
+		manager_remove = new JButton("Remove");
+		manager_description = new JButton("Description");
 
-			buttons.add(manager_loadOther);
-			buttons.add(manager_loadSelected);
-			buttons.add(manager_rename);
-			buttons.add(manager_remove);
-			buttons.add(manager_description);
+		buttons.add(manager_loadOther);
+		buttons.add(manager_loadSelected);
+		buttons.add(manager_rename);
+		buttons.add(manager_remove);
+		buttons.add(manager_description);
 
-			pane.add(buttons);
-		}
+		pane.add(buttons);
 
 		// Lower Buttons
 		JPanel buttons2 = new JPanel(new FlowLayout(FlowLayout.CENTER));
-		{
-			buttons2.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Cloud"));
-
-			cloud_upload = new JButton("Upload");
-
-			cloud_upload.setEnabled(cloud_enabled);
-
-			buttons2.add(cloud_upload);
-
-			pane.add(buttons2);
-		}
+		buttons2.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Cloud"));
+		cloud_upload = new JButton("Upload");
+		cloud_upload.setEnabled(cloud_enabled);
+		buttons2.add(cloud_upload);
+		pane.add(buttons2);
 
 		updateManager();
 
@@ -1004,6 +1001,16 @@ public class Start extends JPanel {
 		return pane;
 	}
 
+	// FNC
+
+	public static void tText(String text, Color color) {
+		try {
+			logAreaDoc.insertString(logAreaDoc.getLength(), text, setColor(color));
+		} catch (BadLocationException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public static void updateCloudManager() {
 		cloud_isSelected = (table2.getSelectedColumn() != -1) ? true : false;
 		cloud_enabled = cloud_checkboxEnable.isSelected();
@@ -1163,6 +1170,42 @@ public class Start extends JPanel {
 				if (table.isCellSelected(i, y)) return true;
 			}
 		}
+		return false;
+	}
+
+	/**
+	 * 
+	 * @param type
+	 *            Which compiler use
+	 * @param source
+	 *            Which folder use
+	 * @param location
+	 *            Where place new file
+	 */
+
+	public static boolean compress(compiler type, String input, String output) { // XXX Complete even with
+		try {
+			if (type == compiler.ZIP) {
+				ZipFile zipFile = new ZipFile(output);
+				ZipParameters parameters = new ZipParameters();
+				parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
+				parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
+				zipFile.createZipFileFromFolder(input, parameters, false, 10485760);
+			}
+		} catch (Exception e) {
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * @param compFile
+	 *            Compressed file used to extract
+	 * @param output
+	 *            Location where extract files from compFile
+	 */
+
+	public static boolean decompress(String compFile, String output) {
 		return false;
 	}
 
