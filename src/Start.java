@@ -25,6 +25,7 @@ import java.util.Calendar;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
@@ -34,6 +35,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
@@ -117,6 +119,7 @@ public class Start extends JPanel {
 	public static JTextField path_saveField;
 	public static JTextField path_backupField;
 	public static JTextField path_gameField;
+	public static compiler backup_archiveType = compiler.ZIP;
 
 	// Date Formats
 	public static JComboBox<Object> date_formatting;
@@ -139,6 +142,10 @@ public class Start extends JPanel {
 	public static Integer cloud_port = 21;
 	public static String cloud_username = "";
 	public static String cloud_password = "";
+
+	public static ButtonGroup backset_archives;
+	public static JRadioButton backset_zip;
+	public static JRadioButton backset_rar;
 
 	// Listeners
 	public static DocumentListener changeListener = new DocumentListener() {
@@ -552,9 +559,53 @@ public class Start extends JPanel {
 
 		JPanel subpanel1 = new JPanel();
 		subpanel1.setLayout(new FlowLayout());
-		subpanel1.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Time stamp"));
+		subpanel1.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Backup filetype"));
+
+		backset_archives = new ButtonGroup();
+
+		JLabel l1 = new JLabel("Filetype: ");
+		l1.setFont(getFont().deriveFont(labelFont));
+		subpanel1.add(l1);
+
+		backset_zip = new JRadioButton();
+		backset_zip.setFont(getFont().deriveFont(labelFont));
+		backset_archives.add(backset_zip);
+		backset_zip.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				update();
+			}
+		});
+		subpanel1.add(backset_zip);
+
+		JLabel l2 = new JLabel("ZIP");
+		l2.setFont(getFont().deriveFont(17.0f));
+		subpanel1.add(l2);
+
+		backset_rar = new JRadioButton();
+		backset_rar.setFont(getFont().deriveFont(labelFont));
+		backset_archives.add(backset_rar);
+		backset_rar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				update();
+			}
+		});
+		subpanel1.add(backset_rar);
+
+		JLabel l3 = new JLabel("RAR");
+		l3.setFont(getFont().deriveFont(17.0f));
+		subpanel1.add(l3);
+
+		backset_archives.setSelected(backset_zip.getModel(), (backup_archiveType == compiler.ZIP) ? true : false);
+		backset_archives.setSelected(backset_rar.getModel(), (backup_archiveType == compiler.RAR) ? true : false);
+
+		// TODO
 
 		pane.add(subpanel1);
+
+		JPanel subpanel2 = new JPanel();
+		subpanel2.setLayout(new FlowLayout());
+		subpanel2.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED), "Time-stamp"));
+		pane.add(subpanel2);
 
 		return pane;
 	}
@@ -748,6 +799,8 @@ public class Start extends JPanel {
 					w.write("[timebackup]\n");
 					w.write((timedBackup_enabled == true ? 1 : 0) + "\n");
 					w.write(timedBackup_split + "");
+					w.write("[backup]\n");
+					w.write(backup_archiveType.toString());
 					w.close();
 					tText("[Settings] Path settings saved", Color.BLACK);
 				} catch (Exception j) {
@@ -824,9 +877,7 @@ public class Start extends JPanel {
 									tText("\n[Local Manager] Save at ", Color.BLACK);
 									tText(path_save, Color.ORANGE);
 									tText(" was removed", Color.BLACK);
-									ZipFile zipFile = new ZipFile(path);
-									tText("\n[Local Manager] Extracting files ...", Color.BLACK);
-									zipFile.extractAll(path_save.substring(0, path_save.lastIndexOf("\\")));
+									decompress(path, path_save.substring(0, path_save.lastIndexOf("\\")));
 									JOptionPane.showMessageDialog(null, "Backup file loaded :\n" + path, "Load completed", JOptionPane.PLAIN_MESSAGE);
 									tText("\n[Local Manager] Backup file ", Color.BLACK);
 									tText(chooser.getSelectedFile().getName(), Color.ORANGE);
@@ -835,6 +886,32 @@ public class Start extends JPanel {
 							}
 						} catch (Exception f) {
 							tText("\n[Local Manager] Operation Failed !", Color.RED);
+						}
+					}
+				});
+
+		manager_loadSelected.addActionListener(new ActionListener() { // TODO loadLocal
+					public void actionPerformed(ActionEvent e) {
+						try {
+							if (isAnyCellSelected(table)) {
+								Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
+								String path = path_backup + "\\" + selected;
+								if (JOptionPane.showConfirmDialog(null, "Do you really want to retrieve files from backup ?"
+										+ "\nThis will remove all current files in specified path" + "\nand place there all files from :\n" + path,
+										"Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
+									delete(new File(path_save));
+									tText("\n[Local Manager] Save at ", Color.BLACK);
+									tText(path_save, Color.ORANGE);
+									tText(" was removed", Color.BLACK);
+									decompress(path, path_save.substring(0, path_save.lastIndexOf("\\")));
+									JOptionPane.showMessageDialog(null, "Backup file loaded :\n" + path, "Load completed", JOptionPane.PLAIN_MESSAGE);
+									tText("\n[Local Manager] Backup file ", Color.BLACK);
+									tText(selected.toString(), Color.ORANGE);
+									tText(" was loaded", Color.BLACK);
+								}
+							}
+						} catch (Exception j) {
+							tText("\n[Local Manager ERROR] Operation Failed !", Color.RED);
 						}
 					}
 				});
@@ -853,34 +930,6 @@ public class Start extends JPanel {
 							tText("\n[Local Manager] File ", Color.BLACK);
 							tText(selected.toString(), Color.ORANGE);
 							tText(" was removed", Color.BLACK);
-						}
-					}
-				});
-
-		manager_loadSelected.addActionListener(new ActionListener() { // TODO loadLocal
-					public void actionPerformed(ActionEvent e) {
-						try {
-							if (isAnyCellSelected(table)) {
-								Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
-								String path = path_backup + "\\" + selected;
-								if (JOptionPane.showConfirmDialog(null, "Do you really want to retrieve files from backup ?"
-										+ "\nThis will remove all current files in specified path" + "\nand place there all files from :\n" + path,
-										"Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
-									delete(new File(path_save));
-									tText("\n[Local Manager] Save at ", Color.BLACK);
-									tText(path_save, Color.ORANGE);
-									tText(" was removed", Color.BLACK);
-									ZipFile zipFile = new ZipFile(path);
-									tText("\n[Local Manager] Extracting files ...", Color.BLACK);
-									zipFile.extractAll(path_save.substring(0, path_save.lastIndexOf("\\")));
-									JOptionPane.showMessageDialog(null, "Backup file loaded :\n" + path, "Load completed", JOptionPane.PLAIN_MESSAGE);
-									tText("\n[Local Manager] Backup file ", Color.BLACK);
-									tText(selected.toString(), Color.ORANGE);
-									tText(" was loaded", Color.BLACK);
-								}
-							}
-						} catch (Exception j) {
-							tText("\n[Local Manager ERROR] Operation Failed !", Color.RED);
 						}
 					}
 				});
@@ -1037,6 +1086,7 @@ public class Start extends JPanel {
 		isGameSpecified = (!path_game.equals("")) ? true : false;
 		window_createBackup.setEnabled(isPathSpecified);
 		window_playGame.setEnabled(isGameSpecified);
+		backup_archiveType = (backset_archives.isSelected(backset_zip.getModel())) ? compiler.ZIP : compiler.RAR;
 		updateTable(path_backup);
 	}
 
@@ -1051,7 +1101,19 @@ public class Start extends JPanel {
 	public static Object[][] getLocalDatabase(String location) { // TODO getLocalDatabase
 		if (!(new File(location).exists())) return new Object[][] {};
 		DateFormat dateFormat = new SimpleDateFormat(date_formats[date_formatChoosen]);
-		File[] files = getFileList(location, ".zip");
+
+		File[] dotZIP = getFileList(location, ".zip");
+		File[] dotRAR = getFileList(location, ".rar");
+		ArrayList<File> archives = new ArrayList<File>();
+
+		for (File f : dotZIP)
+			archives.add(f);
+		for (File f : dotRAR)
+			archives.add(f);
+
+		File[] files = new File[archives.size()];
+		files = archives.toArray(files);
+
 		String[] dates = new String[files.length];
 		long[] size = new long[files.length];
 		String[] names = new String[files.length];
@@ -1085,13 +1147,14 @@ public class Start extends JPanel {
 	}
 
 	public static Object[][] getCloudDatabase(FTPFile[] raw_files) { // TODO getCloudDatabase
-		ArrayList<FTPFile> zipOnly = new ArrayList<FTPFile>();
+		ArrayList<FTPFile> archive = new ArrayList<FTPFile>();
 		for (FTPFile f : raw_files) {
 			String f_name = f.getName();
-			if (f_name.substring(f_name.length() - 4, f_name.length()).equals(".zip")) zipOnly.add(f);
+			if (f_name.substring(f_name.length() - 4, f_name.length()).equals(".zip")
+					|| f_name.substring(f_name.length() - 4, f_name.length()).equals(".rar")) archive.add(f);
 		}
-		FTPFile[] files = new FTPFile[zipOnly.size()];
-		files = zipOnly.toArray(files);
+		FTPFile[] files = new FTPFile[archive.size()];
+		files = archive.toArray(files);
 		DateFormat dateFormat = new SimpleDateFormat(date_formats[date_formatChoosen]);
 		String[] dates = new String[files.length];
 		long[] size = new long[files.length];
@@ -1191,6 +1254,10 @@ public class Start extends JPanel {
 				parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
 				parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
 				zipFile.createZipFileFromFolder(input, parameters, false, 10485760);
+			} else if (type == compiler.RAR) {
+				// rar stuff
+			} else {
+				return false;
 			}
 		} catch (Exception e) {
 			return false;
@@ -1199,14 +1266,26 @@ public class Start extends JPanel {
 	}
 
 	/**
-	 * @param compFile
+	 * @param zipFile
 	 *            Compressed file used to extract
 	 * @param output
-	 *            Location where extract files from compFile
+	 *            Location where extract files from zipFile
 	 */
 
-	public static boolean decompress(String compFile, String output) {
-		return false;
+	public static boolean decompress(String zipFile, String output) {
+		try {
+			if (zipFile.substring(zipFile.lastIndexOf('.'), zipFile.length()).equals(".zip")) {
+				ZipFile file = new ZipFile(zipFile);
+				file.extractAll(output);
+			} else if (zipFile.substring(zipFile.lastIndexOf('.'), zipFile.length()).equals(".rar")) {
+				// rar stuff
+			} else {
+				return false;
+			}
+		} catch (Exception e) {
+			return false;
+		}
+		return true;
 	}
 
 }
