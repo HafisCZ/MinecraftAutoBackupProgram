@@ -49,7 +49,6 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.Style;
 import javax.swing.text.StyleConstants;
@@ -169,8 +168,8 @@ public class Start extends JPanel {
 	public Start() {
 		this.setFocusable(false);
 		this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-		int cloud_info = 0;
-		int path_info = 0;
+		Integer cloud_info = 0;
+		Integer path_info = 0;
 		// Load saved settings
 		try {
 			if (new File("data.ini").isFile()) {
@@ -184,6 +183,9 @@ public class Start extends JPanel {
 					timedBackup_enabled = Integer.parseInt(data[7]) == 1 ? true : false;
 					timedBackup_split = Integer.parseInt(data[8]);
 					if (timedBackup_split.equals(0)) timedBackup_split++;
+				}
+				if (data.length >= 10) {
+					backup_archiveType = data[10].equals("ZIP") ? compiler.ZIP : compiler.RAR;
 				}
 				path_info = data.length;
 			}
@@ -217,7 +219,7 @@ public class Start extends JPanel {
 							new ProcessBuilder(path_game).start();
 						}
 					} catch (Exception f) {
-						tText("\n[Play ERROR] Operation Failed !", Color.RED);
+						log(Color.RED, "\n[Play ERROR] Operation Failed !");
 					}
 				}
 			});
@@ -245,12 +247,10 @@ public class Start extends JPanel {
 						}
 						compress(compiler.ZIP, path_save, filename);
 						updateTable(path_backup);
-						tText("\n[Local Manager] Backup ", Color.BLACK);
-						tText(filename.toString(), Color.ORANGE);
-						tText(" was created", Color.BLACK);
+						log("\n[Local Manager] Backup ", Color.ORANGE, filename.toString(), Color.BLACK, " was created");
 						JOptionPane.showMessageDialog(null, "Backup file created :\n" + filename, "Backup completed", JOptionPane.PLAIN_MESSAGE);
 					} catch (Exception j) {
-						tText("\n[Local Manager ERROR] Operation Failed !", Color.RED);
+						log(Color.RED, "\n[Local Manager ERROR] Operation Failed !");
 					}
 				}
 			});
@@ -266,10 +266,10 @@ public class Start extends JPanel {
 					if (timedBackup_running == true) {
 						new TimebackupService(timedBackup_split);
 						time_buttonStart.setText("Stop");
-						tText("\n[Timed Backup] Operation stopped !", Color.cyan);
+						log(Color.cyan, "\n[Timed Backup] Operation stopped !");
 					} else {
 						time_buttonStart.setText("Start");
-						tText("\n[Timed Backup] Operation started !", Color.cyan);
+						log(Color.cyan, "\n[Timed Backup] Operation started !");
 					}
 				}
 			});
@@ -284,12 +284,8 @@ public class Start extends JPanel {
 		mainWindow.addTab("Backup Settings", tabBackupSettings());
 		mainWindow.addTab("Cloud Setup", tabCloudSettings());
 		mainWindow.addTab("Log Page", tabLog());
-		tText("\n[Settings] ", Color.BLACK);
-		tText("" + path_info, Color.MAGENTA);
-		tText(" path variables loaded", Color.BLACK);
-		tText("\n[Settings] ", Color.BLACK);
-		tText("" + cloud_info, Color.MAGENTA);
-		tText(" cloud variables loaded", Color.BLACK);
+		log("\n[Settings] ", Color.MAGENTA, path_info.toString(), Color.BLACK, " local variables loaded");
+		log("\n[Settings] ", Color.MAGENTA, cloud_info.toString(), Color.BLACK, " cloud variables loaded");
 		update();
 		this.add(mainWindow);
 	}
@@ -318,23 +314,19 @@ public class Start extends JPanel {
 	public static void updateTable2() {
 		try {
 			FTPService ftp = new FTPService(cloud_server, cloud_port);
-			tText("\n[FTP Service] Connected to ", Color.BLACK);
-			tText(cloud_server, Color.BLUE);
-			tText(" @ ", Color.BLACK);
-			tText(cloud_port.toString(), Color.BLUE);
+			log("\n[Cloud Manager] Connected to ", Color.BLUE, " @ ", cloud_port.toString());
 			ftp.authorize(cloud_username, cloud_password).def();
-			tText("\n[FTP Service] Authorized as ", Color.BLACK);
-			tText(cloud_username, Color.BLUE);
+			log("\n[Cloud Manager] Authorized as ", Color.BLUE, cloud_username);
 			DefaultTableModel dm = (DefaultTableModel) table2.getModel();
 			dm.getDataVector().removeAllElements();
 			dm.fireTableDataChanged();
 			table2.setModel(new DefaultTableModel(getCloudDatabase(ftp.getFiles(ftp.currentDirectory())), table2_columns));
 			table2.getColumnModel().getColumn(0).setPreferredWidth(1);
-			tText("\n[Cloud Manager] File list received", Color.BLACK);
+			log("\n[Cloud Manager] File list received");
 			ftp.close();
-			tText("\n[Cloud Manager] Connection closed", Color.BLACK);
+			log("\n[Cloud Manager] Connection closed");
 		} catch (Exception e) {
-			tText("\n[Cloud Manager ERROR] Operation Failed !", Color.RED);
+			log(Color.RED, "\n[Cloud Manager ERROR] Operation Failed !");
 		}
 	}
 
@@ -412,24 +404,18 @@ public class Start extends JPanel {
 						if (isAnyCellSelected(table2)) {
 							String selected = new String(table2.getModel().getValueAt(table2.getSelectedRow(), 1).toString());
 							FTPService ftp = new FTPService(cloud_server, cloud_port);
-							tText("\n[Cloud Manager] Connected to ", Color.BLACK);
-							tText(cloud_server, Color.BLUE);
-							tText(" @ ", Color.BLACK);
-							tText(cloud_port.toString(), Color.BLUE);
+							log("\n[Cloud Manager] Connected to ", Color.BLUE, " @ ", cloud_port.toString());
 							ftp.authorize(cloud_username, cloud_password).def();
-							tText("\n[Cloud Manager] Authorized as ", Color.BLACK);
-							tText(cloud_username, Color.BLUE);
+							log("\n[Cloud Manager] Authorized as ", Color.BLUE, cloud_username);
 							ftp.removeFile(selected);
-							tText("\n[Cloud Manager] File ", Color.BLACK);
-							tText(selected.toString(), Color.ORANGE);
-							tText(" was removed", Color.BLACK);
+							log("\n[Cloud Manager] File ", Color.ORANGE, selected.toString(), Color.BLACK, " uploaded");
 							ftp.close();
-							tText("\n[Cloud Manager] Connection closed", Color.BLACK);
+							log("\n[Cloud Manager] Connection closed");
 							updateTable2();
 							showInfo("Cloud Manager", "File removed succesfully !");
 						}
 					} catch (Exception e) {
-						tText("\n[Cloud Manager] Operation Failed !", Color.RED);
+						log(Color.RED, "\n[Cloud Manager ERROR] Operation Failed !");
 					}
 				}
 			});
@@ -439,24 +425,18 @@ public class Start extends JPanel {
 						if (isAnyCellSelected(table2)) {
 							String selected = new String(table2.getModel().getValueAt(table2.getSelectedRow(), 1).toString());
 							FTPService ftp = new FTPService(cloud_server, cloud_port);
-							tText("\n[Cloud Manager] Connected to ", Color.BLACK);
-							tText(cloud_server, Color.BLUE);
-							tText(" @ ", Color.BLACK);
-							tText(cloud_port.toString(), Color.BLUE);
+							log("\n[Cloud Manager] Connected to ", Color.BLUE, " @ ", cloud_port.toString());
 							ftp.authorize(cloud_username, cloud_password).def();
-							tText("\n[Cloud Manager] Authorized as ", Color.BLACK);
-							tText(cloud_username, Color.BLUE);
+							log("\n[Cloud Manager] Authorized as ", Color.BLUE, cloud_username);
 							ftp.download(path_backup + "\\" + selected, selected);
-							tText("\n[Cloud Manager] File ", Color.BLACK);
-							tText(selected.toString(), Color.ORANGE);
-							tText(" was downloaded", Color.BLACK);
+							log("\n[Cloud Manager] File ", Color.ORANGE, selected.toString(), Color.BLACK, " uploaded");
 							ftp.close();
-							tText("\n[Cloud Manager] Connection closed", Color.BLACK);
+							log("\n[Cloud Manager] Connection closed");
 							update();
 							showInfo("Cloud Manager", "File downloaded succesfully !");
 						}
 					} catch (Exception e) {
-						tText("\n[FTPService ERROR] Operation Failed !", Color.RED);
+						log(Color.RED, "\n[Cloud Manager ERROR] Operation Failed !");
 					}
 				}
 			});
@@ -542,9 +522,9 @@ public class Start extends JPanel {
 					w.write(cloud_usernameField.getText() + "\n");
 					w.write(cloud_passwordField.getText());
 					w.close();
-					tText("\n[Settings] Cloud settings saved", Color.BLACK);
+					log("\n[Settings] Cloud settings saved");
 				} catch (Exception j) {
-					tText("\n[Settings ERROR] Operation Failed !", Color.RED);
+					log(Color.RED, "\n[Settings ERROR] Operation Failed !");
 				}
 			}
 		});
@@ -798,13 +778,13 @@ public class Start extends JPanel {
 					w.write(path_game + "\n");
 					w.write("[timebackup]\n");
 					w.write((timedBackup_enabled == true ? 1 : 0) + "\n");
-					w.write(timedBackup_split + "");
+					w.write(timedBackup_split + "\n");
 					w.write("[backup]\n");
 					w.write(backup_archiveType.toString());
 					w.close();
-					tText("[Settings] Path settings saved", Color.BLACK);
+					log("[Settings] Path settings saved");
 				} catch (Exception j) {
-					tText("\n[Settings ERROR] Operation Failed !", Color.RED);
+					log(Color.RED, "\n[Settings ERROR] Operation Failed !");
 				}
 			}
 		});
@@ -874,18 +854,15 @@ public class Start extends JPanel {
 										+ "\nThis will remove all current files in specified path" + "\nand place there all files from :\n" + path,
 										"Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
 									delete(new File(path_save));
-									tText("\n[Local Manager] Save at ", Color.BLACK);
-									tText(path_save, Color.ORANGE);
-									tText(" was removed", Color.BLACK);
+									log("\n[Local Manager] Save at ", Color.ORANGE, path_save, Color.black, " was removed");
 									decompress(path, path_save.substring(0, path_save.lastIndexOf("\\")));
 									JOptionPane.showMessageDialog(null, "Backup file loaded :\n" + path, "Load completed", JOptionPane.PLAIN_MESSAGE);
-									tText("\n[Local Manager] Backup file ", Color.BLACK);
-									tText(chooser.getSelectedFile().getName(), Color.ORANGE);
-									tText(" was loaded", Color.BLACK);
+									log("\n[Local Manager] Backup file ", Color.ORANGE, chooser.getSelectedFile().getName(), Color.black,
+											" was loaded");
 								}
 							}
 						} catch (Exception f) {
-							tText("\n[Local Manager] Operation Failed !", Color.RED);
+							log(Color.RED, "\n[Local Manager ERROR] Operation Failed !");
 						}
 					}
 				});
@@ -900,18 +877,14 @@ public class Start extends JPanel {
 										+ "\nThis will remove all current files in specified path" + "\nand place there all files from :\n" + path,
 										"Warning", JOptionPane.WARNING_MESSAGE, JOptionPane.YES_NO_OPTION) == JOptionPane.OK_OPTION) {
 									delete(new File(path_save));
-									tText("\n[Local Manager] Save at ", Color.BLACK);
-									tText(path_save, Color.ORANGE);
-									tText(" was removed", Color.BLACK);
+									log("\n[Local Manager] Save at ", Color.ORANGE, path_save, Color.black, " was removed");
 									decompress(path, path_save.substring(0, path_save.lastIndexOf("\\")));
 									JOptionPane.showMessageDialog(null, "Backup file loaded :\n" + path, "Load completed", JOptionPane.PLAIN_MESSAGE);
-									tText("\n[Local Manager] Backup file ", Color.BLACK);
-									tText(selected.toString(), Color.ORANGE);
-									tText(" was loaded", Color.BLACK);
+									log("\n[Local Manager] Backup file ", Color.ORANGE, selected.toString(), Color.black, " was loaded");
 								}
 							}
 						} catch (Exception j) {
-							tText("\n[Local Manager ERROR] Operation Failed !", Color.RED);
+							log(Color.RED, "\n[Local Manager ERROR] Operation Failed !");
 						}
 					}
 				});
@@ -927,9 +900,7 @@ public class Start extends JPanel {
 								delete(new File(descpath));
 							}
 							updateTable(path_backup);
-							tText("\n[Local Manager] File ", Color.BLACK);
-							tText(selected.toString(), Color.ORANGE);
-							tText(" was removed", Color.BLACK);
+							log("\n[Local Manager] File ", Color.ORANGE, selected.toString(), Color.black, " was removed");
 						}
 					}
 				});
@@ -949,12 +920,10 @@ public class Start extends JPanel {
 									File description = new File(path.substring(0, path.length() - 4) + ".decr");
 									description.renameTo(new File(filepath + ".decr"));
 								}
-								tText("\n[Local Manager] File ", Color.BLACK);
-								tText(selected.toString(), Color.ORANGE);
-								tText(" was renamed to ", Color.BLACK);
-								tText(newName, Color.ORANGE);
+								log("\n[Local Manager] File ", Color.ORANGE, selected.toString(), Color.BLACK, " was renamed to ", Color.ORANGE,
+										newName);
 							} else {
-								tText("\n[Local Manager ERROR] Operation Failed !", Color.RED);
+								log(Color.RED, "\n[Local Manager ERROR] Operation Failed !");
 							}
 							updateTable(path_backup);
 						}
@@ -991,9 +960,7 @@ public class Start extends JPanel {
 											.getCanonicalPath()));
 									w.write(description_text);
 									w.close();
-									tText("\n[Local Manager] Description of ", Color.BLACK);
-									tText(selected.toString(), Color.ORANGE);
-									tText(" was created", Color.BLACK);
+									log("\n[Local Manager] Description of ", Color.ORANGE, selected.toString(), Color.BLACK, " was created");
 								} else if (description_text == null) {
 									// Do nothing if returned NULL (CANCEL BUTTON)
 								} else {
@@ -1008,14 +975,12 @@ public class Start extends JPanel {
 												.replace(new File(path).getName(),
 														new File(path).getName().substring(0, new File(path).getName().length() - 3) + "decr"))
 												.delete();
-									tText("\n[Local Manager] Description of ", Color.BLACK);
-									tText(selected.toString(), Color.ORANGE);
-									tText(" was removed", Color.BLACK);
+									log("\n[Local Manager] Description of ", Color.ORANGE, selected.toString(), Color.BLACK, " was removed");
 								}
 								update();
 							}
 						} catch (Exception f) {
-							tText("\n[Local Manager ERROR] Operation Failed !", Color.RED);
+							log(Color.RED, "\n[Local Manager ERROR] Operation Failed !");
 						}
 					}
 				});
@@ -1027,22 +992,16 @@ public class Start extends JPanel {
 								Object selected = table.getModel().getValueAt(table.getSelectedRow(), 1);
 								String path = path_backup + "\\" + selected;
 								FTPService ftp = new FTPService(cloud_server, cloud_port);
-								tText("\n[Cloud Manager] Connected to ", Color.BLACK);
-								tText(cloud_server, Color.BLUE);
-								tText(" @ ", Color.BLACK);
-								tText(cloud_port.toString(), Color.BLUE);
+								log("\n[Cloud Manager] Connected to ", Color.BLUE, " @ ", cloud_port.toString());
 								ftp.authorize(cloud_username, cloud_password).def();
-								tText("\n[Cloud Manager] Authorized as ", Color.BLACK);
-								tText(cloud_username, Color.BLUE);
+								log("\n[Cloud Manager] Authorized as ", Color.BLUE, cloud_username);
 								ftp.upload(path, "");
-								tText("\n[Cloud Manager] File ", Color.BLACK);
-								tText(selected.toString(), Color.ORANGE);
-								tText(" uploaded", Color.BLACK);
+								log("\n[Cloud Manager] File ", Color.ORANGE, selected.toString(), Color.BLACK, " uploaded");
 								ftp.close();
-								tText("\n[Cloud Manager] Connection closed", Color.BLACK);
+								log("\n[Cloud Manager] Connection closed");
 							}
 						} catch (Exception f) {
-							tText("\n[Cloud Manager ERROR] Operation Failed !", Color.RED);
+							log(Color.RED, "\n[Cloud Manager ERROR] Operation Failed !");
 						}
 					}
 				});
@@ -1052,11 +1011,18 @@ public class Start extends JPanel {
 
 	// FNC
 
-	public static void tText(String text, Color color) {
-		try {
-			logAreaDoc.insertString(logAreaDoc.getLength(), text, setColor(color));
-		} catch (BadLocationException e) {
-			e.printStackTrace();
+	public static void log(Object... input) {
+		Color usedCol = Color.BLACK;
+		for (Object o : input) {
+			try {
+				if (o instanceof String) {
+					logAreaDoc.insertString(logAreaDoc.getLength(), o.toString(), setColor(usedCol));
+				} else if (o instanceof Color) {
+					usedCol = (Color) o;
+				}
+			} catch (Exception e) {
+
+			}
 		}
 	}
 
@@ -1136,9 +1102,7 @@ public class Start extends JPanel {
 						.replace(pr_fileName, pr_fileName.substring(0, pr_fileName.length() - 3) + "decr"));
 				if (pr_file.exists()) {
 					mix[i][4] = new String(Files.readAllBytes(Paths.get(pr_file.getCanonicalPath())));
-					tText("\n[Local Manager] Description for ", Color.BLACK);
-					tText(files[i].getName(), Color.ORANGE);
-					tText(" was loaded", Color.black);
+					log("\n[Local Manager] Description for ", Color.ORANGE, files[i].getName(), Color.BLACK, " was loaded");
 				}
 			} catch (Exception e) {
 			}
