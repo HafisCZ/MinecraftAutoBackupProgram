@@ -1171,10 +1171,6 @@ public class Start extends JPanel {
 		return file.delete();
 	}
 
-	public static String[] getFileNameList(String path) {
-		return new File(path).isDirectory() ? new File(path).list() : null;
-	}
-
 	public static File[] getFileList(String path, String doReturn) {
 		File folder = new File(path);
 		if (folder.isDirectory()) {
